@@ -1,6 +1,7 @@
-// Bundles the browser-side TypeScript in src/client/* into public/*.js
-// (esbuild, no typecheck — `npm run typecheck` covers types separately).
+// Bundles the browser-side TypeScript in src/client/* into public/*.js (esbuild)
+// and vendors htmx so everything is self-hosted (no CDN at runtime).
 // Run automatically by `npm run dev` / `npm run deploy`.
+import { copyFile } from 'node:fs/promises'
 import { build } from 'esbuild'
 
 const entries = ['board', 'entry', 'admin']
@@ -16,4 +17,8 @@ await build({
   logLevel: 'info',
 })
 
-console.log(`Built client bundles: ${entries.map((e) => `public/${e}.js`).join(', ')}`)
+await copyFile('node_modules/htmx.org/dist/htmx.min.js', 'public/htmx.min.js')
+
+console.log(
+  `Built ${entries.map((e) => `public/${e}.js`).join(', ')} + vendored public/htmx.min.js`,
+)
