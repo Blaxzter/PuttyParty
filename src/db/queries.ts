@@ -149,9 +149,7 @@ export async function updateEntry(
 }
 
 export async function deleteEntry(db: Db, gameId: number, entryId: number): Promise<void> {
-  await db
-    .delete(entries)
-    .where(sql`${entries.id} = ${entryId} AND ${entries.gameId} = ${gameId}`)
+  await db.delete(entries).where(sql`${entries.id} = ${entryId} AND ${entries.gameId} = ${gameId}`)
 }
 
 export async function resetEntries(db: Db, gameId: number): Promise<void> {
