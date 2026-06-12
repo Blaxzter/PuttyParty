@@ -20,3 +20,12 @@ export async function notifyBoard(env: Env, game: Game, entries: Entry[]): Promi
   const stub = gameRoom(env, game.publicId)
   await stub.update(toRankable(entries), entryUrlFor(env, game.publicId))
 }
+
+/**
+ * Syncs the game's DO snapshot to D1 without broadcasting — called when a board
+ * page loads so a fresh connection replays the current source of truth.
+ */
+export async function syncBoard(env: Env, game: Game, entries: Entry[]): Promise<void> {
+  const stub = gameRoom(env, game.publicId)
+  await stub.sync(toRankable(entries), entryUrlFor(env, game.publicId))
+}

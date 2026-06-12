@@ -36,12 +36,10 @@ export class GameRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client })
   }
 
-  /**
-   * Called by the Worker (RPC) after any entry mutation, with the full current
-   * entry list and the absolute entry URL (for the board QR). Computes standings,
-   * diffs movement vs the stored snapshot, renders, persists, and broadcasts.
-   */
-  async update(entries: RankableEntry[], entryUrl: string): Promise<StandingsMessage> {
+  private async render(
+    entries: RankableEntry[],
+    entryUrl: string,
+  ): Promise<{ message: StandingsMessage; next: Standing[] }> {
     const prev = (await this.ctx.storage.get<Standing[]>('prev')) ?? null
     const next = computeStandings(entries)
     const rows = diffStandings(prev, next)
@@ -55,7 +53,27 @@ export class GameRoom extends DurableObject<Env> {
     }
     await this.ctx.storage.put('prev', next)
     await this.ctx.storage.put('latest', message)
+    return { message, next }
+  }
+
+  /**
+   * Called by the Worker (RPC) after any entry mutation, with the full current
+   * entry list and the absolute entry URL (for the board QR). Computes standings,
+   * diffs movement vs the stored snapshot, renders, persists, and broadcasts.
+   */
+  async update(entries: RankableEntry[], entryUrl: string): Promise<StandingsMessage> {
+    const { message } = await this.render(entries, entryUrl)
     this.broadcast(message)
+    return message
+  }
+
+  /**
+   * Syncs the cached snapshot to D1 without broadcasting. Called when a board
+   * page loads so the replay-on-connect reflects the source of truth even if D1
+   * was changed out-of-band (e.g. seeding).
+   */
+  async sync(entries: RankableEntry[], entryUrl: string): Promise<StandingsMessage> {
+    const { message } = await this.render(entries, entryUrl)
     return message
   }
 

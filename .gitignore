@@ -15,3 +15,6 @@ public/htmx.min.js
 Thumbs.db
 .idea/
 .vscode/
+
+# Playwright MCP scratch output (snapshots, console logs)
+.playwright-mcp/

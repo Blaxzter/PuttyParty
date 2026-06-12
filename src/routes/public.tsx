@@ -6,7 +6,7 @@ import { toRankable } from '../do/protocol'
 import { qrSvg } from '../lib/qr'
 import { computeStandings, diffStandings, placementFor } from '../lib/ranking'
 import { fieldErrors, perHoleEntrySchema, totalEntrySchema } from '../lib/validation'
-import { entryUrlFor, gameRoom, notifyBoard } from '../realtime'
+import { entryUrlFor, gameRoom, notifyBoard, syncBoard } from '../realtime'
 import { BoardPage } from '../ui/board/Board'
 import { renderStandings } from '../ui/board/standings'
 import {
@@ -104,6 +104,12 @@ publicRoutes.get('/:publicId/board', async (c) => {
   const game = await loadGame(c.env, c.req.param('publicId'))
   if (!game) return c.html(<NotFoundPage />, 404)
   const entries = await listEntries(getDb(c.env), game.id)
+  // Sync the DO cache to D1 so the board's WS replay reflects the source of truth.
+  try {
+    await syncBoard(c.env, game, entries)
+  } catch {
+    /* board still renders from D1 below */
+  }
   return c.html(
     <BoardPage
       game={game}
