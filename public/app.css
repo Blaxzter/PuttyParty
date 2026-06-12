@@ -114,6 +114,7 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   * {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat specific animation selectors for a11y */
     animation: none !important;
   }
 }
@@ -812,9 +813,6 @@ body {
   .pp-cards-grid {
     grid-template-columns: 1fr;
   }
-  .pp-manage-grid {
-    grid-template-columns: 1fr !important;
-  }
 }
 
 .pp-game-card {
@@ -935,6 +933,11 @@ body {
   gap: 22px;
   align-items: start;
 }
+@media (max-width: 760px) {
+  .pp-manage-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .pp-entries-row {
   display: grid;
   grid-template-columns: 44px 1fr 130px 70px 74px;
@@ -981,9 +984,6 @@ body {
   height: 2px;
   background-image: linear-gradient(90deg, #c9bfa6 0 10px, transparent 10px 18px);
   background-size: 18px 2px;
-}
-[hidden] {
-  display: none !important;
 }
 
 /* Radio-segmented control (create/edit form) — JS-free via :has() */
@@ -1042,20 +1042,17 @@ body {
 }
 
 /* ---- Print: entry QR sheet (admin "Drucken") ---- */
+.pp-print-only {
+  display: none;
+}
 @media print {
-  @page {
-    margin: 1cm;
-  }
   body {
     background: #fff;
   }
   .pp-no-print {
-    display: none !important;
+    display: none;
   }
   .pp-print-only {
-    display: block !important;
+    display: block;
   }
-}
-.pp-print-only {
-  display: none;
 }

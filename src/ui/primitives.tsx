@@ -147,9 +147,9 @@ const CONFETTI = [
 
 export const Confetti: FC<{ class?: string }> = ({ class: cls }) => (
   <div class={`pp-confetti ${cls ?? ''}`} aria-hidden="true">
-    {CONFETTI.map((c, i) => (
+    {CONFETTI.map((c) => (
       <span
-        key={i}
+        key={`${c.left}-${c.top}`}
         style={`left:${c.left}%;top:${c.top}%;width:${c.w}px;height:${c.h}px;background:${c.color};border-radius:${c.round}${c.round === 50 ? '%' : 'px'};animation-duration:${c.dur}s;animation-delay:${c.delay}s`}
       />
     ))}

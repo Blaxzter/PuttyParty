@@ -26,9 +26,9 @@ export const BoardPage: FC<{
     <Layout title={`${game.name} · Bestenliste`} bodyClass="pp-body--board" scripts={['/board.js']}>
       <div class="pp-board" data-public-id={game.publicId}>
         <div class="pp-board-confetti" aria-hidden="true">
-          {BOARD_CONFETTI.map((c, i) => (
+          {BOARD_CONFETTI.map((c) => (
             <span
-              key={i}
+              key={`${c.left}-${c.color}`}
               style={`position:absolute;left:${c.left}%;top:8%;width:${c.w}px;height:${c.h}px;background:${c.color};border-radius:${c.round};animation:pp-fall ${c.dur}s ease-in ${c.delay}s infinite`}
             />
           ))}

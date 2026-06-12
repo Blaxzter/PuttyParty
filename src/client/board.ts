@@ -32,7 +32,8 @@ function tickUpdated(): void {
 }
 
 function apply(msg: StandingsMessage): void {
-  if (!msg || msg.type !== 'standings') return
+  if (!msg) return
+  if (msg.type !== 'standings') return
   if (live) live.innerHTML = msg.html
   if (participantsEl) participantsEl.textContent = String(msg.participants)
   tickUpdated()
