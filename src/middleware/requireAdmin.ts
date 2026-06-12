@@ -8,16 +8,19 @@ import { verifyAccessJwt } from '../lib/access'
  * independently verify the `Cf-Access-Jwt-Assertion` JWT here so there is no
  * unprotected path to admin code (this runs regardless of how the route is hit).
  *
- * Local dev has no Access: set DEV_ADMIN_BYPASS="true" in .dev.vars to develop
- * admin with a mock identity. This must never be enabled in production.
+ * The local dev bypass (DEV_ADMIN_BYPASS="true") is honored ONLY when Access is
+ * not configured, i.e. it is inert in any real deployment that has set
+ * ACCESS_TEAM_DOMAIN / ACCESS_AUD — so it can never silently disable JWT
+ * verification in production, even if the var is accidentally left on.
  */
 export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
-  if (c.env.DEV_ADMIN_BYPASS === 'true') {
-    c.set('admin', { email: 'dev@localhost', name: 'Dev Admin' })
-    return next()
-  }
+  const accessConfigured = Boolean(c.env.ACCESS_TEAM_DOMAIN && c.env.ACCESS_AUD)
 
-  if (!c.env.ACCESS_TEAM_DOMAIN || !c.env.ACCESS_AUD) {
+  if (!accessConfigured) {
+    if (c.env.DEV_ADMIN_BYPASS === 'true') {
+      c.set('admin', { email: 'dev@localhost', name: 'Dev Admin' })
+      return next()
+    }
     return c.text('Admin nicht konfiguriert: ACCESS_TEAM_DOMAIN / ACCESS_AUD fehlen.', 403)
   }
 

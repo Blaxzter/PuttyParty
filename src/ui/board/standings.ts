@@ -32,8 +32,14 @@ export interface RenderedStandings {
 /** Renders the full inner HTML of #pp-board-live for the given ranked rows. */
 export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): RenderedStandings {
   const aside = qrAside(opts.entryUrl, opts.updatedAt)
+  // Mobile-only CTA: on the phone showing the board, the QR is useless, so the
+  // design swaps it for a direct entry link (hidden on the big screen via CSS).
+  const cta = `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">＋ Eigenen Score eintragen</a>`
   if (rows.length === 0) {
-    return { html: `<div class="pp-board-body">${renderEmpty()}${aside}</div>`, participants: 0 }
+    return {
+      html: `<div class="pp-board-body">${renderEmpty()}${aside}</div>${cta}`,
+      participants: 0,
+    }
   }
   const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3))}</div>`
   const body =
@@ -41,7 +47,7 @@ export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): R
     `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3))}</div>` +
     aside +
     `</div>`
-  return { html: podium + body, participants: rows.length }
+  return { html: podium + body + cta, participants: rows.length }
 }
 
 function ballHtml(size: number): string {

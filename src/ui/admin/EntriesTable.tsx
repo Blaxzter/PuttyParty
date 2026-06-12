@@ -46,6 +46,7 @@ const actionsCol = (game: Game, entry: Entry) => (
       type="button"
       class="pp-iconbtn"
       title="Bearbeiten"
+      aria-label={`Eintrag von ${entry.name} bearbeiten`}
       hx-get={`/admin/games/${game.publicId}/entries?edit=${entry.id}`}
       hx-target="#pp-entries"
       hx-swap="outerHTML"
@@ -56,6 +57,7 @@ const actionsCol = (game: Game, entry: Entry) => (
       type="button"
       class="pp-iconbtn pp-iconbtn--del"
       title="Löschen"
+      aria-label={`Eintrag von ${entry.name} löschen`}
       hx-delete={`/admin/games/${game.publicId}/entries/${entry.id}`}
       hx-target="#pp-entries"
       hx-swap="outerHTML"
@@ -121,13 +123,19 @@ const EditRow: FC<{
       style="text-align:right;font-size:18px;padding:5px 8px;border-radius:8px"
     />
     <span style="display:flex;gap:6px;justify-content:flex-end">
-      <button type="submit" class="pp-iconbtn pp-iconbtn--ok" title="Speichern">
+      <button
+        type="submit"
+        class="pp-iconbtn pp-iconbtn--ok"
+        title="Speichern"
+        aria-label="Speichern"
+      >
         ✓
       </button>
       <button
         type="button"
         class="pp-iconbtn"
         title="Abbrechen"
+        aria-label="Bearbeiten abbrechen"
         hx-get={`/admin/games/${game.publicId}/entries`}
         hx-target="#pp-entries"
         hx-swap="outerHTML"
@@ -179,13 +187,19 @@ const AddRow: FC<{ game: Game; draft?: RowDraft; errors?: Record<string, string>
       style="text-align:right;font-size:18px;padding:5px 8px;border-radius:8px"
     />
     <span style="display:flex;gap:6px;justify-content:flex-end">
-      <button type="submit" class="pp-iconbtn pp-iconbtn--ok" title="Hinzufügen">
+      <button
+        type="submit"
+        class="pp-iconbtn pp-iconbtn--ok"
+        title="Hinzufügen"
+        aria-label="Eintrag hinzufügen"
+      >
         ✓
       </button>
       <button
         type="button"
         class="pp-iconbtn"
         title="Abbrechen"
+        aria-label="Hinzufügen abbrechen"
         hx-get={`/admin/games/${game.publicId}/entries`}
         hx-target="#pp-entries"
         hx-swap="outerHTML"

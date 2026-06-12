@@ -105,6 +105,7 @@ export const GameCard: FC<{ game: GameWithCount; baseUrl: string }> = ({ game, b
                 type="button"
                 class="pp-btn pp-btn--outline pp-btn--sm"
                 title="Link kopieren"
+                aria-label="Link zur Eintrag-Seite kopieren"
                 data-copy={entryUrl}
                 data-copy-label="Link zur Eintrag-Seite kopiert"
               >

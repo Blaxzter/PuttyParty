@@ -192,7 +192,8 @@ export const EntrySuccessScreen: FC<{
             </div>
             {placement.placesAhead > 0 ? (
               <div style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-body);font-weight:600;font-size:12px;color:#8fe6b0;margin-top:2px">
-                <span style="font-size:14px">▲</span> {placement.placesAhead} Plätze
+                <span style="font-size:14px">▲</span> {placement.placesAhead}{' '}
+                {placement.placesAhead === 1 ? 'Platz' : 'Plätze'}
               </div>
             ) : null}
           </div>

@@ -305,6 +305,10 @@ body {
 .pp-input:focus {
   border-color: var(--pp-turf-from);
 }
+.pp-input:focus-visible {
+  outline: 2px solid var(--pp-turf-from);
+  outline-offset: 2px;
+}
 .pp-input--score {
   font-family: var(--font-score);
   font-size: 22px;
@@ -767,6 +771,27 @@ body {
     width: 33%;
     padding: 12px 8px;
   }
+  .pp-board-cta {
+    display: flex;
+  }
+}
+
+/* Direct entry CTA on the board — hidden on the big screen, shown on mobile. */
+.pp-board-cta {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 20px 24px;
+  background: var(--pp-flag);
+  color: var(--pp-card);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 14px;
+  padding: 15px;
+  text-decoration: none;
+  box-shadow: 0 4px 0 var(--pp-flag-press);
 }
 
 /* ============================================================================

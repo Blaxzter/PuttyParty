@@ -125,7 +125,7 @@ Set in `wrangler.jsonc` (`vars`) for production, overridden by `.dev.vars` local
 | `APP_BASE_URL` | Public base URL used to build QR/share links, e.g. `https://puttparty.example`. |
 | `ACCESS_TEAM_DOMAIN` | Cloudflare Access team domain, e.g. `myteam.cloudflareaccess.com` (no scheme). |
 | `ACCESS_AUD` | The Access application's **Application Audience (AUD)** tag. |
-| `DEV_ADMIN_BYPASS` | `"true"` only locally to skip Access. **Must be unset/`"false"` in production.** |
+| `DEV_ADMIN_BYPASS` | `"true"` to skip Access locally. **Honored only when Access is unconfigured** (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` empty), so it is inert — fail-closed — in any real deployment even if left on. |
 
 Bindings: `DB` (D1), `GAME_ROOM` (Durable Object), `ASSETS` (static assets).
 

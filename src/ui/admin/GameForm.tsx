@@ -48,12 +48,14 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
         <h3 class="pp-h" style="margin:0;font-weight:800;font-size:22px;color:var(--pp-turf-to)">
           {props.mode === 'create' ? 'Neues Spiel' : 'Spiel bearbeiten'}
         </h3>
-        <span
+        <button
+          type="button"
           data-close-modal
-          style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;background:#F1ECE0;color:#6B7B6E;font-size:16px;cursor:pointer"
+          aria-label="Schließen"
+          style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;border:none;background:#F1ECE0;color:#6B7B6E;font-size:16px;cursor:pointer"
         >
           ✕
-        </span>
+        </button>
       </div>
 
       <form {...submit} hx-target="#pp-modal-body" hx-swap="innerHTML">

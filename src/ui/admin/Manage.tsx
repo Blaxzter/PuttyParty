@@ -191,6 +191,7 @@ export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> =
               type="button"
               class="pp-iconbtn"
               title="Einstellungen bearbeiten"
+              aria-label="Spieleinstellungen bearbeiten"
               data-open-modal="pp-edit-modal"
             >
               ✎

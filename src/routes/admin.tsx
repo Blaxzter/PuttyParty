@@ -64,9 +64,8 @@ async function entriesResponse(
 }
 
 async function broadcast(c: { env: Env }, game: Game): Promise<void> {
-  const entries = await listEntries(getDb(c.env), game.id)
   try {
-    await notifyBoard(c.env, game, entries)
+    await notifyBoard(c.env, game)
   } catch {
     /* boards recover via polling */
   }

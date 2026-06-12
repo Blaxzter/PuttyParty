@@ -44,11 +44,21 @@ describe('requireAdmin guard', () => {
     expect(res.status).toBe(403)
   })
 
-  it('allows the dev bypass with a mock identity', async () => {
-    const res = await adminApp().request('/admin/ping', {}, env({ DEV_ADMIN_BYPASS: 'true' }))
+  it('allows the dev bypass only when Access is unconfigured', async () => {
+    const res = await adminApp().request(
+      '/admin/ping',
+      {},
+      env({ ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '', DEV_ADMIN_BYPASS: 'true' }),
+    )
     expect(res.status).toBe(200)
     const body = (await res.json()) as { admin: { name: string } }
     expect(body.admin.name).toBe('Dev Admin')
+  })
+
+  it('ignores the dev bypass when Access IS configured (fail closed)', async () => {
+    // bypass on, but Access configured -> must still require a valid JWT
+    const res = await adminApp().request('/admin/ping', {}, env({ DEV_ADMIN_BYPASS: 'true' }))
+    expect(res.status).toBe(403)
   })
 })
 

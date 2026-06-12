@@ -82,7 +82,7 @@ publicRoutes.post('/:publicId/entries', async (c) => {
   const entries = await listEntries(db, game.id)
   // Best-effort live broadcast; never fail the submission if realtime hiccups.
   try {
-    await notifyBoard(c.env, game, entries)
+    await notifyBoard(c.env, game)
   } catch {
     /* boards recover via polling */
   }
@@ -106,7 +106,7 @@ publicRoutes.get('/:publicId/board', async (c) => {
   const entries = await listEntries(getDb(c.env), game.id)
   // Sync the DO cache to D1 so the board's WS replay reflects the source of truth.
   try {
-    await syncBoard(c.env, game, entries)
+    await syncBoard(c.env, game)
   } catch {
     /* board still renders from D1 below */
   }

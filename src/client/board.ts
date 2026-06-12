@@ -31,9 +31,15 @@ function tickUpdated(): void {
   }
 }
 
+let lastApplied = 0
+
 function apply(msg: StandingsMessage): void {
   if (!msg) return
   if (msg.type !== 'standings') return
+  // Ignore stale frames (e.g. a WS replay older than the last poll result) so the
+  // three update paths (replay / broadcast / poll) commute regardless of order.
+  if (typeof msg.updatedAt === 'number' && msg.updatedAt <= lastApplied) return
+  lastApplied = msg.updatedAt
   if (live) live.innerHTML = msg.html
   if (participantsEl) participantsEl.textContent = String(msg.participants)
   tickUpdated()
