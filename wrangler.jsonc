@@ -1,48 +1,52 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "putt-party",
-  "main": "src/index.tsx",
-  "compatibility_date": "2026-06-01",
-  "compatibility_flags": ["nodejs_compat"],
-
-  // Public client assets (CSS + bundled JS). Served before the Worker runs;
-  // non-matching paths fall through to the Hono app. `html_handling: none`
-  // keeps routing predictable (we have no static HTML).
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "html_handling": "none",
-    "not_found_handling": "none"
-  },
-
-  // SECURITY: disable the *.workers.dev route in production so the only public
-  // entrypoint is the custom domain that sits behind Cloudflare Access for /admin.
-  "workers_dev": false,
-
-  "observability": { "enabled": true },
-
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "puttparty-db",
-      // Replace with your real D1 id before `wrangler deploy` (see README).
-      // A placeholder is fine for local `wrangler dev` (uses a local SQLite file).
-      "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
-  ],
-
-  "durable_objects": {
-    "bindings": [{ "name": "GAME_ROOM", "class_name": "GameRoom" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
-
-  // Non-secret config. Override locally via .dev.vars (see .dev.vars.example).
-  // ACCESS_TEAM_DOMAIN / ACCESS_AUD must be set for production admin auth.
-  "vars": {
-    "APP_BASE_URL": "http://localhost:8787",
-    "ACCESS_TEAM_DOMAIN": "fabraham.cloudflareaccess.com",
-    "ACCESS_AUD": "",
-    "DEV_ADMIN_BYPASS": "false"
-  }
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "putt-party",
+    "main": "src/index.tsx",
+    "compatibility_date": "2026-06-01",
+    "compatibility_flags": ["nodejs_compat"],
+    // Public client assets (CSS + bundled JS). Served before the Worker runs;
+    // non-matching paths fall through to the Hono app. `html_handling: none`
+    // keeps routing predictable (we have no static HTML).
+    "assets": {
+        "directory": "./public",
+        "binding": "ASSETS",
+        "html_handling": "none",
+        "not_found_handling": "none",
+    },
+    // SECURITY: disable the *.workers.dev route in production so the only public
+    // entrypoint is the custom domain that sits behind Cloudflare Access for /admin.
+    "workers_dev": false,
+    "observability": {
+        "enabled": true,
+    },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "puttparty-db",
+            "database_id": "968fee68-a101-4836-ab5c-0b76713e844e",
+            "migrations_dir": "migrations",
+        },
+    ],
+    "durable_objects": {
+        "bindings": [
+            {
+                "name": "GAME_ROOM",
+                "class_name": "GameRoom",
+            },
+        ],
+    },
+    "migrations": [
+        {
+            "tag": "v1",
+            "new_sqlite_classes": ["GameRoom"],
+        },
+    ],
+    // Non-secret config. Override locally via .dev.vars (see .dev.vars.example).
+    // ACCESS_TEAM_DOMAIN / ACCESS_AUD are provided as Worker *secrets* (set via the
+    // dashboard / `wrangler secret put`), so they are intentionally NOT listed here —
+    // keeping them in `vars` would overwrite those secrets on every deploy.
+    "vars": {
+        "APP_BASE_URL": "https://putty-party.fabraham.dev",
+        "DEV_ADMIN_BYPASS": "false",
+    },
 }
