@@ -15,6 +15,7 @@ async function seedGame(
 ) {
   return createGame(getDb(env), {
     publicId,
+    manageId: `${publicId}-mng`,
     name: 'Integration Cup',
     date: '2026-08-01',
     location: 'Testplatz',
@@ -86,6 +87,52 @@ describe('GameRoom DO broadcast path', () => {
     expect(parsed.participants).toBe(1)
     expect(parsed.html).toContain('Andrea Moser')
     ws?.close()
+  })
+})
+
+describe('landing + self-service (capability URL)', () => {
+  it('serves the public landing at /', async () => {
+    const res = await SELF.fetch('https://pp.test/')
+    expect(res.status).toBe(200)
+    expect(await res.text()).toContain('Spiel erstellen')
+  })
+
+  it('public create redirects to the secret /m/<token> manage URL', async () => {
+    const res = await SELF.fetch(
+      'https://pp.test/games',
+      form({ name: 'Self Cup', date: '15.09.2026', holes: '9' }),
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get('HX-Redirect')).toMatch(/^\/m\/.+/)
+  })
+
+  it('loads the manage page via the token without any Access/JWT', async () => {
+    await seedGame('itest-mng')
+    const res = await SELF.fetch('https://pp.test/m/itest-mng-mng')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('Verwaltungs-Link') // owner save-link banner
+    expect(html).toContain('Integration Cup')
+  })
+
+  it('returns 404 for an unknown manage token', async () => {
+    const res = await SELF.fetch('https://pp.test/m/definitely-not-a-token')
+    expect(res.status).toBe(404)
+  })
+
+  it('lets the owner add an entry that shows on the board', async () => {
+    await seedGame('itest-owner')
+    const add = await SELF.fetch(
+      'https://pp.test/m/itest-owner-mng/entries',
+      form({ name: 'Owner Add', strokes: '41' }),
+    )
+    expect(add.status).toBe(200)
+    expect(await add.text()).toContain('Owner Add')
+
+    const state = await SELF.fetch('https://pp.test/g/itest-owner/board/state')
+    const body = (await state.json()) as { participants: number; html: string }
+    expect(body.participants).toBe(1)
+    expect(body.html).toContain('Owner Add')
   })
 })
 

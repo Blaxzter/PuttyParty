@@ -9,6 +9,8 @@ export const games = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     /** Opaque, unguessable id used in public URLs. */
     publicId: text('public_id').notNull(),
+    /** Secret capability token for self-service management (/m/<token>). */
+    manageId: text('manage_id'),
     name: text('name').notNull(),
     /** ISO date (YYYY-MM-DD); rendered as DD.MM.YYYY. */
     date: text('date').notNull(),
@@ -25,7 +27,10 @@ export const games = sqliteTable(
     createdAt: integer('created_at').notNull().default(epochMs),
     updatedAt: integer('updated_at').notNull().default(epochMs),
   },
-  (t) => [uniqueIndex('idx_games_public_id').on(t.publicId)],
+  (t) => [
+    uniqueIndex('idx_games_public_id').on(t.publicId),
+    uniqueIndex('idx_games_manage_id').on(t.manageId),
+  ],
 )
 
 export const entries = sqliteTable(

@@ -15,6 +15,10 @@ export interface GameFormValues {
 
 export interface GameFormProps {
   mode: 'create' | 'edit'
+  /** POST target in create mode, e.g. "/games" (public) or "/admin/games". */
+  createPath?: string
+  /** PATCH target in edit mode, e.g. "/m/<token>" or "/admin/games/<id>". */
+  basePath?: string
   game?: Game
   values?: GameFormValues
   errors?: Record<string, string>
@@ -39,8 +43,8 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
   const errors = props.errors ?? {}
   const submit =
     props.mode === 'create'
-      ? { 'hx-post': '/admin/games' }
-      : { 'hx-patch': `/admin/games/${props.game?.publicId}` }
+      ? { 'hx-post': props.createPath ?? '/admin/games' }
+      : { 'hx-patch': props.basePath ?? `/admin/games/${props.game?.publicId}` }
 
   return (
     <>
@@ -176,12 +180,12 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
   )
 }
 
-/** The hidden modal shell that hosts the create form on the dashboard. */
-export const CreateGameModal: FC = () => (
+/** The hidden modal shell that hosts the create form (dashboard or landing). */
+export const CreateGameModal: FC<{ createPath: string }> = ({ createPath }) => (
   <div class="pp-modal-backdrop" id="pp-create-modal">
     <div class="pp-modal">
       <div id="pp-modal-body">
-        <GameFormBody mode="create" />
+        <GameFormBody mode="create" createPath={createPath} />
       </div>
     </div>
   </div>

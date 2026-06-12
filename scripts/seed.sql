@@ -2,6 +2,8 @@
 -- Re-runnable: clears the demo games first. Public entry/board URLs:
 --   /g/sommerfest-demo        /g/sommerfest-demo/board
 --   /g/oster-demo             /g/jugend-demo            /g/weihnachten-demo
+-- Self-service manage URL (secret owner link), e.g.:
+--   /m/sommerfest-manage-demo
 
 DELETE FROM entries WHERE game_id IN (
   SELECT id FROM games WHERE public_id IN
@@ -10,11 +12,11 @@ DELETE FROM entries WHERE game_id IN (
 DELETE FROM games WHERE public_id IN
   ('sommerfest-demo', 'oster-demo', 'jugend-demo', 'weihnachten-demo');
 
-INSERT INTO games (public_id, name, date, location, holes, entry_mode, teams_enabled, status, created_at, updated_at) VALUES
-  ('sommerfest-demo', 'Sommerfest-Cup',      '2026-06-28', 'Pfadiheim',     9, 'per_hole', 1, 'open',     1750000004000, 1750000004000),
-  ('oster-demo',      'Oster-Turnier',       '2026-04-12', 'Gemeindesaal',  9, 'total',    1, 'locked',   1750000003000, 1750000003000),
-  ('weihnachten-demo','Weihnachtsfeier 2025','2025-12-19', 'Foyer',         9, 'total',    1, 'archived', 1750000002000, 1750000002000),
-  ('jugend-demo',     'Jugend-Cup',          '2026-07-05', 'Aussenplatz',  12, 'total',    0, 'open',     1750000001000, 1750000001000);
+INSERT INTO games (public_id, manage_id, name, date, location, holes, entry_mode, teams_enabled, status, created_at, updated_at) VALUES
+  ('sommerfest-demo', 'sommerfest-manage-demo', 'Sommerfest-Cup',      '2026-06-28', 'Pfadiheim',     9, 'per_hole', 1, 'open',     1750000004000, 1750000004000),
+  ('oster-demo',      'oster-manage-demo',      'Oster-Turnier',       '2026-04-12', 'Gemeindesaal',  9, 'total',    1, 'locked',   1750000003000, 1750000003000),
+  ('weihnachten-demo','weihnachten-manage-demo','Weihnachtsfeier 2025','2025-12-19', 'Foyer',         9, 'total',    1, 'archived', 1750000002000, 1750000002000),
+  ('jugend-demo',     'jugend-manage-demo',     'Jugend-Cup',          '2026-07-05', 'Aussenplatz',  12, 'total',    0, 'open',     1750000001000, 1750000001000);
 
 -- Sommerfest-Cup: 14 entries, a tie at 43 (Sandra/Jonas).
 INSERT INTO entries (game_id, name, team, strokes) VALUES

@@ -32,6 +32,11 @@ export async function getGameByPublicId(db: Db, publicId: string): Promise<Game 
   return row
 }
 
+export async function getGameByManageId(db: Db, manageId: string): Promise<Game | undefined> {
+  const [row] = await db.select().from(games).where(eq(games.manageId, manageId)).limit(1)
+  return row
+}
+
 export async function countEntries(db: Db, gameId: number): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -51,6 +56,7 @@ export async function listEntries(db: Db, gameId: number): Promise<Entry[]> {
 
 export type CreateGameInput = {
   publicId: string
+  manageId: string
   name: string
   date: string
   location: string | null

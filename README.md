@@ -14,18 +14,33 @@ for realtime, [htmx](https://htmx.org) for progressive enhancement, and
 
 ## Screenshots
 
-| Live board (16:9) | Entry page (per-hole) |
+| Public landing | Live board (16:9) |
 | --- | --- |
-| ![Live leaderboard](docs/screenshots/board.png) | ![Score entry](docs/screenshots/entry.png) |
+| ![Landing](docs/screenshots/landing.png) | ![Live leaderboard](docs/screenshots/board.png) |
 
-| Admin dashboard | Manage game |
+| Entry page (per-hole) | Self-service manage (secret link) |
 | --- | --- |
-| ![Admin dashboard](docs/screenshots/dashboard.png) | ![Manage game](docs/screenshots/manage.png) |
+| ![Score entry](docs/screenshots/entry.png) | ![Manage game](docs/screenshots/manage-selfservice.png) |
 
 ---
 
+## Two ways to run a game
+
+- **Self-service** — the public **landing page** (`/`) explains the app and lets
+  anyone create a game in seconds. On create they're handed a **secret manage
+  link** (`/m/<token>`, a capability URL — no login) that grants full control of
+  that one game (entries, lock, reset, archive, delete). The page tells them to
+  save the link; it's the only way back in.
+- **Org admin** — `/admin` (behind Cloudflare Access) is an org-wide dashboard
+  that can create and manage **every** game.
+
+Both share the exact same management UI and handlers (parameterised by a base
+path); the only difference is how the request is authorised.
+
 ## Features
 
+- **Public landing** (`/`) — German marketing page with screenshots + a
+  create-game modal (open, unauthenticated).
 - **Public entry page** (`/g/:id`) — phone-first form, single total or per-hole
   (auto-summed) scoring per game, optional team field, inline validation,
   success/placement and locked states.
@@ -87,7 +102,9 @@ npm run dev                          # builds client bundles, then `wrangler dev
 
 Then open:
 
-- **Admin dashboard** — http://localhost:8787/admin
+- **Landing** — http://localhost:8787/
+- **Demo manage link** (self-service) — http://localhost:8787/m/sommerfest-manage-demo
+- **Org admin dashboard** — http://localhost:8787/admin
 - **Demo entry page** — http://localhost:8787/g/sommerfest-demo
 - **Demo live board** — http://localhost:8787/g/sommerfest-demo/board
 
@@ -174,8 +191,16 @@ an in-Worker JWT check (so there is no unprotected path to admin code).
 ## Security model
 
 - **Public pages** (`/g/:id*`) need no login; their only protection is the
-  unguessable `publicId` (nanoid). They contain no links to admin.
-- **Admin** is gated by Cloudflare Access **and** the in-Worker JWT check, which
-  runs on every admin route regardless of how it's reached. `workers.dev` is
-  disabled so the custom domain (behind Access) is the only entrypoint.
+  unguessable `publicId` (nanoid). They contain no links to admin or to manage.
+- **Self-service management** (`/m/:manageId`) is a capability URL: the
+  unguessable, longer `manageId` token grants full control of that one game. It
+  lives outside `/admin*` (so Cloudflare Access doesn't block non-staff owners)
+  and is never rendered on public `/g/*` pages. Anyone with the link can manage
+  that game — the owner is told to keep it private.
+- **Org admin** (`/admin*`) is gated by Cloudflare Access **and** the in-Worker
+  JWT check, which runs on every admin route regardless of how it's reached.
+  `workers.dev` is disabled so the custom domain (behind Access) is the only
+  entrypoint to the org dashboard.
+- Game creation is **open/unauthenticated** by design (self-service). Spam
+  hardening (rate-limit / Turnstile) is a documented future option.
 - No secrets are committed; `.dev.vars` is git-ignored.

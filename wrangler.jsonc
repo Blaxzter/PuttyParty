@@ -41,7 +41,7 @@
   // ACCESS_TEAM_DOMAIN / ACCESS_AUD must be set for production admin auth.
   "vars": {
     "APP_BASE_URL": "http://localhost:8787",
-    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_TEAM_DOMAIN": "fabraham.cloudflareaccess.com",
     "ACCESS_AUD": "",
     "DEV_ADMIN_BYPASS": "false"
   }

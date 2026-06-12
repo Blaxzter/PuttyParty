@@ -1081,3 +1081,218 @@ body {
     display: block;
   }
 }
+
+/* ============================================================================
+   LANDING
+   ========================================================================== */
+.pp-body--landing {
+  background: var(--pp-page-bg);
+}
+.pp-landing-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 24px;
+}
+.pp-landing-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--pp-turf-to);
+}
+.pp-login {
+  margin-left: auto;
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--pp-text-soft);
+  text-decoration: none;
+  background: var(--pp-card);
+  border: 1px solid var(--pp-border-cream);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.pp-hero {
+  background: var(--pp-turf-grad);
+  color: var(--pp-cream);
+}
+.pp-hero-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 40px;
+  align-items: center;
+}
+.pp-hero h1 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.05;
+  margin: 0 0 16px;
+  color: #fffdf8;
+}
+.pp-hero p {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.5;
+  color: rgba(246, 241, 230, 0.82);
+  margin: 0 0 26px;
+  max-width: 30em;
+}
+.pp-cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pp-hero-shot img {
+  width: 100%;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  display: block;
+}
+
+.pp-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+.pp-section h2 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(24px, 3vw, 32px);
+  color: var(--pp-turf-to);
+  text-align: center;
+  margin: 0 0 8px;
+}
+.pp-lead {
+  text-align: center;
+  font-family: var(--font-body);
+  color: var(--pp-text-soft);
+  margin: 0 auto 36px;
+  max-width: 34em;
+}
+.pp-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.pp-step {
+  background: var(--pp-card);
+  border: 1px solid var(--pp-border-cream);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(22, 38, 31, 0.06);
+}
+.pp-step .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--pp-flag);
+  color: #fff;
+  font-family: var(--font-head);
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.pp-step h3 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--pp-ink);
+  margin: 0 0 6px;
+}
+.pp-step p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--pp-text-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pp-feature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 48px;
+}
+.pp-feature:last-child {
+  margin-bottom: 0;
+}
+.pp-feature-img img {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(20, 68, 47, 0.18);
+  display: block;
+}
+.pp-feature h3 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--pp-turf-to);
+  margin: 0 0 10px;
+}
+.pp-feature p {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--pp-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pp-cta-band {
+  background: var(--pp-turf-grad);
+  color: var(--pp-cream);
+  text-align: center;
+}
+.pp-cta-band-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+.pp-cta-band h2 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(24px, 3vw, 34px);
+  color: #fffdf8;
+  margin: 0 0 18px;
+}
+
+.pp-landing-foot {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--pp-text-faint);
+  flex-wrap: wrap;
+}
+.pp-landing-foot a {
+  color: var(--pp-text-soft);
+}
+
+@media (max-width: 760px) {
+  .pp-hero-inner,
+  .pp-feature {
+    grid-template-columns: 1fr;
+  }
+  .pp-hero-shot {
+    order: -1;
+  }
+  .pp-steps {
+    grid-template-columns: 1fr;
+  }
+}

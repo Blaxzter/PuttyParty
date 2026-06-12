@@ -13,6 +13,8 @@ export interface RowDraft {
 export interface EntriesTableProps {
   game: Game
   entries: Entry[]
+  /** URL prefix for hx endpoints, e.g. "/admin/games/sf26" or "/m/<token>". */
+  basePath: string
   editId?: number
   addMode?: boolean
   draft?: RowDraft
@@ -40,14 +42,14 @@ function RankChip({ rank }: { rank: number }) {
   )
 }
 
-const actionsCol = (game: Game, entry: Entry) => (
+const actionsCol = (basePath: string, entry: Entry) => (
   <span style="display:flex;gap:6px;justify-content:flex-end">
     <button
       type="button"
       class="pp-iconbtn"
       title="Bearbeiten"
       aria-label={`Eintrag von ${entry.name} bearbeiten`}
-      hx-get={`/admin/games/${game.publicId}/entries?edit=${entry.id}`}
+      hx-get={`${basePath}/entries?edit=${entry.id}`}
       hx-target="#pp-entries"
       hx-swap="outerHTML"
     >
@@ -58,7 +60,7 @@ const actionsCol = (game: Game, entry: Entry) => (
       class="pp-iconbtn pp-iconbtn--del"
       title="Löschen"
       aria-label={`Eintrag von ${entry.name} löschen`}
-      hx-delete={`/admin/games/${game.publicId}/entries/${entry.id}`}
+      hx-delete={`${basePath}/entries/${entry.id}`}
       hx-target="#pp-entries"
       hx-swap="outerHTML"
       hx-confirm={`Eintrag von ${entry.name} löschen?`}
@@ -68,7 +70,11 @@ const actionsCol = (game: Game, entry: Entry) => (
   </span>
 )
 
-const DisplayRow: FC<{ game: Game; entry: Entry; rank: number }> = ({ game, entry, rank }) => (
+const DisplayRow: FC<{ basePath: string; entry: Entry; rank: number }> = ({
+  basePath,
+  entry,
+  rank,
+}) => (
   <div class="pp-entries-row" data-entry-id={entry.id}>
     <RankChip rank={rank} />
     <span class="pp-h" style="font-weight:700;font-size:15px;color:var(--pp-ink)">
@@ -84,20 +90,20 @@ const DisplayRow: FC<{ game: Game; entry: Entry; rank: number }> = ({ game, entr
     >
       {entry.strokes}
     </span>
-    {actionsCol(game, entry)}
+    {actionsCol(basePath, entry)}
   </div>
 )
 
 const EditRow: FC<{
-  game: Game
+  basePath: string
   entry: Entry
   rank: number
   draft?: RowDraft
   errors?: Record<string, string>
-}> = ({ game, entry, rank, draft, errors }) => (
+}> = ({ basePath, entry, rank, draft, errors }) => (
   <form
     class="pp-entries-row pp-entries-row--edit"
-    hx-patch={`/admin/games/${game.publicId}/entries/${entry.id}`}
+    hx-patch={`${basePath}/entries/${entry.id}`}
     hx-target="#pp-entries"
     hx-swap="outerHTML"
   >
@@ -136,7 +142,7 @@ const EditRow: FC<{
         class="pp-iconbtn"
         title="Abbrechen"
         aria-label="Bearbeiten abbrechen"
-        hx-get={`/admin/games/${game.publicId}/entries`}
+        hx-get={`${basePath}/entries`}
         hx-target="#pp-entries"
         hx-swap="outerHTML"
       >
@@ -146,14 +152,14 @@ const EditRow: FC<{
   </form>
 )
 
-const AddRow: FC<{ game: Game; draft?: RowDraft; errors?: Record<string, string> }> = ({
-  game,
+const AddRow: FC<{ basePath: string; draft?: RowDraft; errors?: Record<string, string> }> = ({
+  basePath,
   draft,
   errors,
 }) => (
   <form
     class="pp-entries-row pp-entries-row--edit"
-    hx-post={`/admin/games/${game.publicId}/entries`}
+    hx-post={`${basePath}/entries`}
     hx-target="#pp-entries"
     hx-swap="outerHTML"
   >
@@ -200,7 +206,7 @@ const AddRow: FC<{ game: Game; draft?: RowDraft; errors?: Record<string, string>
         class="pp-iconbtn"
         title="Abbrechen"
         aria-label="Hinzufügen abbrechen"
-        hx-get={`/admin/games/${game.publicId}/entries`}
+        hx-get={`${basePath}/entries`}
         hx-target="#pp-entries"
         hx-swap="outerHTML"
       >
@@ -213,6 +219,7 @@ const AddRow: FC<{ game: Game; draft?: RowDraft; errors?: Record<string, string>
 export const EntriesTable: FC<EntriesTableProps> = ({
   game,
   entries,
+  basePath,
   editId,
   addMode,
   draft,
@@ -223,6 +230,8 @@ export const EntriesTable: FC<EntriesTableProps> = ({
   )
   const rankById = new Map(standings.map((s) => [s.entry.id, s.rank]))
   const rowError = errors && Object.keys(errors).length > 0 ? Object.values(errors)[0] : undefined
+  // game retained for future per-game rendering hints (e.g. teamsEnabled).
+  void game
 
   return (
     <div id="pp-entries" class="pp-card" style="overflow:hidden">
@@ -236,7 +245,7 @@ export const EntriesTable: FC<EntriesTableProps> = ({
             type="button"
             class="pp-btn pp-btn--dark pp-btn--sm"
             style="margin-left:auto"
-            hx-get={`/admin/games/${game.publicId}/entries?add=1`}
+            hx-get={`${basePath}/entries?add=1`}
             hx-target="#pp-entries"
             hx-swap="outerHTML"
           >
@@ -256,7 +265,7 @@ export const EntriesTable: FC<EntriesTableProps> = ({
         <span />
       </div>
 
-      {addMode ? <AddRow game={game} draft={draft} errors={errors} /> : null}
+      {addMode ? <AddRow basePath={basePath} draft={draft} errors={errors} /> : null}
 
       {rowError && (addMode || editId) ? (
         <div style="padding:4px 20px 0">
@@ -273,7 +282,7 @@ export const EntriesTable: FC<EntriesTableProps> = ({
           editId === entry.id ? (
             <EditRow
               key={entry.id}
-              game={game}
+              basePath={basePath}
               entry={entry}
               rank={rankById.get(entry.id) ?? 0}
               draft={draft}
@@ -282,7 +291,7 @@ export const EntriesTable: FC<EntriesTableProps> = ({
           ) : (
             <DisplayRow
               key={entry.id}
-              game={game}
+              basePath={basePath}
               entry={entry}
               rank={rankById.get(entry.id) ?? 0}
             />

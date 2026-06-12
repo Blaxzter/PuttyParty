@@ -192,7 +192,7 @@ export const DashboardPage: FC<{
           </div>
         )}
       </div>
-      <CreateGameModal />
+      <CreateGameModal createPath="/admin/games" />
     </Layout>
   )
 }

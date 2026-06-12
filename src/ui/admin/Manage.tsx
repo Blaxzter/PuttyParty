@@ -1,16 +1,16 @@
-import type { FC } from 'hono/jsx'
+import type { Child, FC } from 'hono/jsx'
 import type { Entry, Game } from '../../db/schema'
 import { Layout } from '../layout'
 import { QrImg } from '../primitives'
 import { EntriesTable } from './EntriesTable'
 import { GameFormBody } from './GameForm'
 
-export const StatusToggle: FC<{ game: Game }> = ({ game }) => (
+export const StatusToggle: FC<{ game: Game; basePath: string }> = ({ game, basePath }) => (
   <div id="pp-status-seg" class="pp-seg" style="width:200px">
     <button
       type="button"
       aria-pressed={game.status === 'open' ? 'true' : 'false'}
-      hx-patch={`/admin/games/${game.publicId}`}
+      hx-patch={basePath}
       hx-vals='{"status":"open"}'
       hx-target="#pp-status-seg"
       hx-swap="outerHTML"
@@ -20,7 +20,7 @@ export const StatusToggle: FC<{ game: Game }> = ({ game }) => (
     <button
       type="button"
       aria-pressed={game.status === 'locked' ? 'true' : 'false'}
-      hx-patch={`/admin/games/${game.publicId}`}
+      hx-patch={basePath}
       hx-vals='{"status":"locked"}'
       hx-target="#pp-status-seg"
       hx-swap="outerHTML"
@@ -103,7 +103,23 @@ const ShareColumn: FC<{ game: Game; baseUrl: string }> = ({ game, baseUrl }) => 
   )
 }
 
-const DangerZone: FC<{ game: Game }> = ({ game }) => (
+const DangerCell: FC<{ title: string; note: string; children: Child }> = ({
+  title,
+  note,
+  children,
+}) => (
+  <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:12px">
+    <div style="flex:1">
+      <div class="pp-h" style="font-weight:600;font-size:14px;color:var(--pp-ink)">
+        {title}
+      </div>
+      <div style="font-family:var(--font-body);font-size:12px;color:#8a6258">{note}</div>
+    </div>
+    {children}
+  </div>
+)
+
+const DangerZone: FC<{ basePath: string }> = ({ basePath }) => (
   <div class="pp-danger-zone">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--pp-flag);color:#fff;font-size:13px;font-weight:700">
@@ -114,55 +130,94 @@ const DangerZone: FC<{ game: Game }> = ({ game }) => (
       </span>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:12px">
-        <div style="flex:1">
-          <div class="pp-h" style="font-weight:600;font-size:14px;color:var(--pp-ink)">
-            Alle Einträge zurücksetzen
-          </div>
-          <div style="font-family:var(--font-body);font-size:12px;color:#8a6258">
-            Bestätigung erforderlich · nicht umkehrbar
-          </div>
-        </div>
+      <DangerCell
+        title="Alle Einträge zurücksetzen"
+        note="Bestätigung erforderlich · nicht umkehrbar"
+      >
         <button
           type="button"
           class="pp-btn pp-btn--sm"
           style="background:var(--pp-card);color:var(--pp-red-text);border:1.5px solid #e2a497"
-          hx-post={`/admin/games/${game.publicId}/reset`}
+          hx-post={`${basePath}/reset`}
           hx-target="#pp-entries"
           hx-swap="outerHTML"
           hx-confirm="Wirklich ALLE Einträge dieses Spiels löschen?"
         >
           Zurücksetzen
         </button>
-      </div>
-      <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:12px">
-        <div style="flex:1">
-          <div class="pp-h" style="font-weight:600;font-size:14px;color:var(--pp-ink)">
-            Spiel archivieren
-          </div>
-          <div style="font-family:var(--font-body);font-size:12px;color:#8a6258">
-            Bestätigung erforderlich
-          </div>
-        </div>
+      </DangerCell>
+      <DangerCell title="Spiel archivieren" note="Nimmt keine neuen Scores mehr an">
         <button
           type="button"
-          class="pp-btn pp-btn--danger-solid pp-btn--sm"
-          hx-patch={`/admin/games/${game.publicId}`}
+          class="pp-btn pp-btn--outline pp-btn--sm"
+          style="color:var(--pp-red-text);border-color:#e2a497"
+          hx-patch={basePath}
           hx-vals='{"status":"archived"}'
           hx-swap="none"
           hx-confirm="Spiel archivieren? Es nimmt keine neuen Scores mehr an."
         >
           Archivieren
         </button>
-      </div>
+      </DangerCell>
+      <DangerCell title="Spiel löschen" note="Unwiderruflich · alle Daten weg">
+        <button
+          type="button"
+          class="pp-btn pp-btn--danger-solid pp-btn--sm"
+          hx-delete={basePath}
+          hx-swap="none"
+          hx-confirm="Spiel UNWIDERRUFLICH löschen? Alle Einträge gehen verloren."
+        >
+          Löschen
+        </button>
+      </DangerCell>
     </div>
   </div>
 )
 
-export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> = ({
+const OwnerBanner: FC<{ manageUrl: string }> = ({ manageUrl }) => (
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#FBF3DD;border:1.5px solid #ecd9a3;border-radius:16px;padding:16px 20px;margin-bottom:22px">
+    <span style="font-size:22px">🔑</span>
+    <div style="flex:1;min-width:220px">
+      <div class="pp-h" style="font-weight:700;font-size:15px;color:var(--pp-turf-to)">
+        Dein Verwaltungs-Link — speichere ihn!
+      </div>
+      <div style="font-family:var(--font-body);font-size:12.5px;color:var(--pp-text-muted);margin:2px 0 6px">
+        Nur über diesen Link kommst du wieder hierher und kannst dein Spiel verwalten.
+      </div>
+      <div class="pp-mono" style="font-size:11px;color:var(--pp-text-soft);word-break:break-all">
+        {manageUrl}
+      </div>
+    </div>
+    <button
+      type="button"
+      class="pp-btn pp-btn--primary pp-btn--sm"
+      data-copy={manageUrl}
+      data-copy-label="Verwaltungs-Link kopiert"
+    >
+      Link kopieren
+    </button>
+  </div>
+)
+
+export interface ManagePageProps {
+  game: Game
+  entries: Entry[]
+  baseUrl: string
+  /** hx prefix for this game's management, e.g. "/admin/games/<id>" or "/m/<token>". */
+  basePath: string
+  /** Optional back-link (org admin); omitted for self-service. */
+  backLink?: { href: string; label: string }
+  /** Present for self-service: shows the save-this-link banner. */
+  owner?: { manageUrl: string }
+}
+
+export const ManagePage: FC<ManagePageProps> = ({
   game,
   entries,
   baseUrl,
+  basePath,
+  backLink,
+  owner,
 }) => (
   <Layout
     title={`${game.name} · Verwalten`}
@@ -171,14 +226,16 @@ export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> =
     scripts={['/admin.js']}
   >
     <div class="pp-admin-wrap pp-no-print">
+      {owner ? <OwnerBanner manageUrl={owner.manageUrl} /> : null}
+
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap">
         <div>
           <a
-            href="/admin"
+            href={backLink?.href ?? '/'}
             class="pp-mono"
             style="font-size:11px;color:var(--pp-text-faint);text-decoration:none"
           >
-            ← Dashboard · Spiel verwalten
+            {backLink?.label ?? 'Spiel verwalten'}
           </a>
           <div style="display:flex;align-items:center;gap:10px">
             <h2
@@ -201,9 +258,9 @@ export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> =
         <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:9px">
             <span class="pp-h" style="font-weight:600;font-size:13px;color:var(--pp-text-soft)">
-              Einträge:
+              Status:
             </span>
-            <StatusToggle game={game} />
+            <StatusToggle game={game} basePath={basePath} />
           </div>
           <a
             href={`/g/${game.publicId}/board`}
@@ -217,10 +274,10 @@ export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> =
 
       <div class="pp-manage-grid">
         <ShareColumn game={game} baseUrl={baseUrl} />
-        <EntriesTable game={game} entries={entries} />
+        <EntriesTable game={game} entries={entries} basePath={basePath} />
       </div>
 
-      <DangerZone game={game} />
+      <DangerZone basePath={basePath} />
     </div>
 
     {/* Print sheet (visible only when printing the entry QR) */}
@@ -243,7 +300,7 @@ export const ManagePage: FC<{ game: Game; entries: Entry[]; baseUrl: string }> =
     <div class="pp-modal-backdrop" id="pp-edit-modal">
       <div class="pp-modal">
         <div id="pp-modal-body">
-          <GameFormBody mode="edit" game={game} />
+          <GameFormBody mode="edit" game={game} basePath={basePath} />
         </div>
       </div>
     </div>
