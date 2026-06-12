@@ -1,0 +1,16 @@
+# Copy to `.dev.vars` for local `wrangler dev`. NEVER commit `.dev.vars`.
+# These override the non-secret defaults in wrangler.jsonc `vars`.
+
+# Base URL used to build QR/share links. For local dev:
+APP_BASE_URL="http://localhost:8787"
+
+# Cloudflare Access (only needed when testing real admin auth).
+# Your team domain, e.g. "myteam.cloudflareaccess.com" (no scheme).
+ACCESS_TEAM_DOMAIN=""
+# The Access application's AUD tag (from the Access app's "Application Audience").
+ACCESS_AUD=""
+
+# Local-only escape hatch: when "true", /admin* skips the Access JWT check and
+# uses a mock identity so you can develop admin without Cloudflare Access.
+# MUST remain "false" (unset) in production.
+DEV_ADMIN_BYPASS="true"

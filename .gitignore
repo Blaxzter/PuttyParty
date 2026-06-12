@@ -1,0 +1,16 @@
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+*.local
+
+# Generated client bundles (built by scripts/build-client.mjs)
+public/board.js
+public/entry.js
+public/admin.js
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

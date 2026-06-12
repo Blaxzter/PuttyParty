@@ -1,0 +1,41 @@
+{
+  "name": "putt-party",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Putt Party — live mini-golf tournament leaderboard on Cloudflare Workers",
+  "scripts": {
+    "build:client": "node scripts/build-client.mjs",
+    "dev": "npm run build:client && wrangler dev",
+    "deploy": "npm run build:client && wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply puttparty-db --local",
+    "db:migrate": "wrangler d1 migrations apply puttparty-db --remote",
+    "db:seed:local": "wrangler d1 execute puttparty-db --local --file=./scripts/seed.sql",
+    "db:seed": "wrangler d1 execute puttparty-db --remote --file=./scripts/seed.sql",
+    "db:reset:local": "npm run db:migrate:local && npm run db:seed:local",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.9.0",
+    "jose": "^6.0.11",
+    "nanoid": "^5.1.5",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.0",
+    "@cloudflare/vitest-pool-workers": "^0.9.0",
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "drizzle-kit": "^0.31.2",
+    "esbuild": "^0.25.5",
+    "partysocket": "^1.1.4",
+    "typescript": "^5.8.3",
+    "vitest": "~3.2.0",
+    "wrangler": "^4.20.0"
+  }
+}
