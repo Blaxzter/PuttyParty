@@ -1,6 +1,5 @@
 import type { FC } from 'hono/jsx'
 import type { Game } from '../../db/schema'
-import { isoToGerman } from '../../lib/dates'
 import { Field } from '../primitives'
 
 export interface GameFormValues {
@@ -28,7 +27,7 @@ function resolve(props: GameFormProps): Required<GameFormValues> {
   const { values: v, game } = props
   return {
     name: v?.name ?? game?.name ?? '',
-    date: v?.date ?? (game ? isoToGerman(game.date) : ''),
+    date: v?.date ?? game?.date ?? '',
     location: v?.location ?? game?.location ?? '',
     holes: v?.holes ?? String(game?.holes ?? 9),
     entryMode: v?.entryMode ?? game?.entryMode ?? 'total',
@@ -64,15 +63,15 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
 
       <form {...submit} hx-target="#pp-modal-body" hx-swap="innerHTML">
         <div style="padding:22px 26px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-            <div style="grid-column:span 2">
+          <div class="pp-form-grid" style="margin-bottom:16px">
+            <div class="pp-form-grid__full">
               <Field name="name" label="Name" required value={v.name} error={errors.name} />
             </div>
             <Field
               name="date"
               label="Datum"
+              type="date"
               required
-              placeholder="TT.MM.JJJJ"
               value={v.date}
               error={errors.date}
             />
@@ -83,18 +82,9 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
               value={v.location}
               error={errors.location}
             />
-            <Field
-              name="holes"
-              label="Anzahl Bahnen"
-              type="number"
-              inputMode="numeric"
-              value={v.holes}
-              error={errors.holes}
-              inputClass="pp-input--score"
-            />
             <div>
               <span class="pp-field-label">Erfassung</span>
-              <div class="pp-seg pp-seg--radio">
+              <div class="pp-seg pp-seg--radio" data-entry-mode>
                 <label>
                   <input
                     type="radio"
@@ -115,6 +105,17 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
                 </label>
               </div>
             </div>
+            <div data-holes-field hidden={v.entryMode === 'total'}>
+              <Field
+                name="holes"
+                label="Anzahl Bahnen"
+                type="number"
+                inputMode="numeric"
+                value={v.holes}
+                error={errors.holes}
+                inputClass="pp-input--score"
+              />
+            </div>
           </div>
 
           <div style="display:flex;align-items:center;gap:8px;background:var(--pp-cream);border:1.5px solid var(--pp-border-input);border-radius:11px;padding:12px 14px;margin-bottom:16px">
@@ -126,7 +127,7 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
             </span>
           </div>
 
-          <div style="display:flex;align-items:center;gap:16px">
+          <div class="pp-form-row">
             <div style="flex:1;display:flex;align-items:center;gap:12px;background:var(--pp-cream);border:1.5px solid var(--pp-border-input);border-radius:11px;padding:12px 14px">
               <div>
                 <div class="pp-h" style="font-weight:600;font-size:14px;color:var(--pp-ink)">

@@ -46,7 +46,7 @@
     // dashboard / `wrangler secret put`), so they are intentionally NOT listed here —
     // keeping them in `vars` would overwrite those secrets on every deploy.
     "vars": {
-        "APP_BASE_URL": "https://putty-party.fabraham.dev",
+        "APP_BASE_URL": "https://puttyparty.fabraham.dev",
         "DEV_ADMIN_BYPASS": "false",
     },
 }

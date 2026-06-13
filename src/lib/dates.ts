@@ -43,6 +43,19 @@ export function germanToIso(de: string): string | null {
   return `${m[3]}-${m[2]}-${m[1]}`
 }
 
+/** Accepts ISO "YYYY-MM-DD" (native date input) or German "DD.MM.YYYY"; returns ISO or null. */
+export function anyToIso(input: string): string | null {
+  const s = input.trim()
+  const iso = ISO_RE.exec(s)
+  if (iso) {
+    const year = Number(iso[1])
+    const month = Number(iso[2])
+    const day = Number(iso[3])
+    return isRealDate(year, month, day) ? `${iso[1]}-${iso[2]}-${iso[3]}` : null
+  }
+  return germanToIso(s)
+}
+
 /** "2026-06-28" -> "28. Juni 2026" (falls back to the raw string if invalid). */
 export function formatGermanLong(iso: string): string {
   const m = ISO_RE.exec(iso)

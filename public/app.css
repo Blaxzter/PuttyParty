@@ -951,6 +951,34 @@ body {
   overflow: hidden;
 }
 
+/* Game form layout (responsive) */
+.pp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.pp-form-grid__full {
+  grid-column: 1 / -1;
+}
+.pp-form-row {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.pp-form-row > * {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+@media (max-width: 520px) {
+  .pp-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .pp-modal-backdrop {
+    padding: 3vh 10px;
+  }
+}
+
 /* Manage layout */
 .pp-manage-grid {
   display: grid;

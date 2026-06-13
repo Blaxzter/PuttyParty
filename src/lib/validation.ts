@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { germanToIso } from './dates'
+import { anyToIso } from './dates'
 
 // Form bodies arrive as Record<string, string | File>. These schemas validate +
 // coerce them. Public-facing messages are German (shown inline in the UI).
@@ -40,13 +40,13 @@ const optionalText = (max: number) =>
 
 const nameField = z.string().trim().min(1, 'Bitte deinen Namen eingeben.').max(60)
 
-/** Admin: TT.MM.JJJJ -> ISO date. */
+/** Admin: native date input (ISO) or TT.MM.JJJJ -> ISO date. */
 const germanDateToIso = z
   .string()
   .trim()
-  .regex(/^\d{2}\.\d{2}\.\d{4}$/, 'Datum im Format TT.MM.JJJJ angeben.')
+  .min(1, 'Datum ist erforderlich.')
   .transform((d, ctx) => {
-    const iso = germanToIso(d)
+    const iso = anyToIso(d)
     if (!iso) {
       ctx.addIssue({ code: 'custom', message: 'Ungültiges Datum.' })
       return z.NEVER

@@ -21,6 +21,24 @@ function closeModal(el: Element): void {
   el.closest('.pp-modal-backdrop')?.classList.remove('is-open')
 }
 
+// In the game form, the number of holes only matters when scoring per hole, so
+// hide "Anzahl Bahnen" while "Gesamtschläge" (total) is selected.
+function syncHolesVisibility(scope: ParentNode): void {
+  const group = scope.querySelector<HTMLElement>('[data-entry-mode]')
+  const holes = scope.querySelector<HTMLElement>('[data-holes-field]')
+  if (!group || !holes) return
+  const checked = group.querySelector<HTMLInputElement>('input[name="entryMode"]:checked')
+  holes.hidden = checked?.value !== 'per_hole'
+}
+
+document.addEventListener('change', (event) => {
+  const target = event.target as HTMLElement
+  if (target instanceof HTMLInputElement && target.name === 'entryMode') {
+    const form = target.closest<HTMLElement>('form') ?? document
+    syncHolesVisibility(form)
+  }
+})
+
 document.addEventListener('click', (event) => {
   const target = event.target as HTMLElement
   const opener = target.closest<HTMLElement>('[data-open-modal]')
@@ -59,4 +77,8 @@ document.body.addEventListener('htmx:afterSwap', (event) => {
   if (swapped?.id === 'pp-entries' || swapped?.id === 'pp-modal-body') {
     swapped.querySelector<HTMLInputElement>('input[autofocus], input')?.focus()
   }
+  if (swapped) syncHolesVisibility(swapped)
 })
+
+// Set the initial holes visibility for any game form present on load.
+syncHolesVisibility(document)
