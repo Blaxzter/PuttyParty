@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 132" fill="none" role="img" aria-hidden="true">
+  <!-- Minigolf dog-leg (L-shaped) lane with a corner ramp + gold flag. Muted. -->
+  <path d="M14 120 L120 120 L120 30 L82 30 L82 82 L14 82 Z"
+        fill="#ffffff" fill-opacity="0.055" stroke="#ffffff" stroke-opacity="0.17"
+        stroke-width="2.4" stroke-linejoin="round"/>
+  <!-- route -->
+  <path d="M34 101 L101 101 L101 54" stroke="#ffffff" stroke-opacity="0.16"
+        stroke-width="1.6" stroke-linecap="round" stroke-dasharray="1 7"/>
+  <!-- tee + ball -->
+  <circle cx="32" cy="101" r="8" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.4"/>
+  <circle cx="32" cy="101" r="4.5" fill="#ffffff" fill-opacity="0.5"/>
+  <!-- corner ramp -->
+  <path d="M88 114 L112 114 L112 92 Z"
+        fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1"/>
+  <!-- cup + flag -->
+  <ellipse cx="101" cy="50" rx="5.5" ry="4.4" fill="#0b1d13" fill-opacity="0.22"/>
+  <rect x="100" y="32" width="2.2" height="18" rx="1.1" fill="#ffffff" fill-opacity="0.24"/>
+  <path d="M102.2 33 l14 4 -14 4 z" fill="#f2c14e" fill-opacity="0.36"/>
+</svg>

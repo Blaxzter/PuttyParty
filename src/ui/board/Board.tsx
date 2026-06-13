@@ -21,11 +21,19 @@ export const BoardPage: FC<{
 }> = ({ game, entries, entryUrl, updatedAt }) => {
   const meta = boardMeta(game)
   const rows = diffStandings(null, computeStandings(entries))
-  const rendered = renderStandings(rows, { entryUrl, updatedAt })
+  const rendered = renderStandings(rows, {
+    entryUrl,
+    updatedAt,
+    locked: game.status !== 'open',
+    perHole: game.entryMode === 'per_hole',
+  })
   return (
     <Layout title={`${game.name} · Bestenliste`} bodyClass="pp-body--board" scripts={['/board.js']}>
       <div class="pp-board" data-public-id={game.publicId}>
-        <div class="pp-board-confetti" aria-hidden="true">
+        <div
+          class={`pp-board-confetti${rows.length === 0 ? ' pp-board-confetti--hidden' : ''}`}
+          aria-hidden="true"
+        >
           {BOARD_CONFETTI.map((c) => (
             <span
               key={`${c.left}-${c.color}`}
@@ -36,11 +44,11 @@ export const BoardPage: FC<{
 
         <div class="pp-board-top">
           <BrandBadge size={46} bg="rgba(255,253,248,0.12)" />
-          <div>
+          <div class="pp-board-headline">
             <h1 class="pp-board-title">{meta.title}</h1>
             <div class="pp-board-sub">{meta.subtitle}</div>
           </div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+          <div class="pp-board-meta">
             <div class="pp-live">
               <span class="glow" />
               <span class="lbl">LIVE</span>

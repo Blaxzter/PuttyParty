@@ -22,6 +22,17 @@ export interface StandingsRenderOpts {
   /** Absolute URL to the entry page, encoded in the board's QR. */
   entryUrl: string
   updatedAt: number
+  /**
+   * When the game isn't accepting entries (status !== 'open'), the QR + CTA are
+   * replaced with a "closed" hint — scanning would otherwise dead-end on the
+   * locked entry page.
+   */
+  locked?: boolean
+  /**
+   * Per-hole game: rows and podium cards become tappable to reveal each player's
+   * per-hole scorecard. No-op for entries without stored hole strokes.
+   */
+  perHole?: boolean
 }
 
 export interface RenderedStandings {
@@ -31,20 +42,24 @@ export interface RenderedStandings {
 
 /** Renders the full inner HTML of #pp-board-live for the given ranked rows. */
 export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): RenderedStandings {
-  const aside = qrAside(opts.entryUrl, opts.updatedAt)
+  const aside = opts.locked ? lockedAside(opts.updatedAt) : qrAside(opts.entryUrl, opts.updatedAt)
   // Mobile-only CTA: on the phone showing the board, the QR is useless, so the
   // design swaps it for a direct entry link (hidden on the big screen via CSS).
-  const cta = `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">＋ Eigenen Score eintragen</a>`
+  // Dropped when locked — there's nowhere useful to send the tap.
+  const cta = opts.locked
+    ? ''
+    : `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">＋ Eigenen Score eintragen</a>`
   if (rows.length === 0) {
     return {
-      html: `<div class="pp-board-body">${renderEmpty()}${aside}</div>${cta}`,
+      html: `<div class="pp-board-body pp-board-body--empty">${renderEmpty()}${aside}</div>${cta}`,
       participants: 0,
     }
   }
-  const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3))}</div>`
+  const perHole = !!opts.perHole
+  const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3), perHole)}</div>`
   const body =
     `<div class="pp-board-body">` +
-    `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3))}</div>` +
+    `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3), perHole)}</div>` +
     aside +
     `</div>`
   return { html: podium + body + cta, participants: rows.length }
@@ -64,7 +79,23 @@ function flagHtml(size: number): string {
   )
 }
 
-function podiumCard(row: RankedRow, isFirst: boolean): string {
+// Per-hole scorecard strip, shown when a per_hole row/card is expanded. Each
+// cell is a hole number over its strokes; the last cell is the total (Σ).
+// Returns '' for entries with no stored per-hole data (e.g. a total entry).
+function scorecardHtml(holeStrokes: number[] | null | undefined, total: number): string {
+  if (!holeStrokes || holeStrokes.length === 0) return ''
+  const cells = holeStrokes
+    .map((s, i) => `<span class="pp-sc-cell"><b>${i + 1}</b><i>${s}</i></span>`)
+    .join('')
+  return (
+    `<div class="pp-scorecard">` +
+    cells +
+    `<span class="pp-sc-cell pp-sc-cell--total"><b>Σ</b><i>${total}</i></span>` +
+    `</div>`
+  )
+}
+
+function podiumCard(row: RankedRow, isFirst: boolean, perHole: boolean): string {
   const chipSize = isFirst ? 52 : 44
   const chipFont = isFirst ? 24 : 20
   const scoreFont = isFirst ? 62 : 46
@@ -76,26 +107,33 @@ function podiumCard(row: RankedRow, isFirst: boolean): string {
   const team = row.entry.team
     ? `<div class="pp-podium-team">${esc(row.entry.team)}</div>`
     : '<div class="pp-podium-team">&nbsp;</div>'
+  const card = perHole ? scorecardHtml(row.entry.holeStrokes, row.entry.strokes) : ''
+  const cls =
+    'pp-podium-card' +
+    (isFirst ? ' pp-podium-card--first' : '') +
+    (card ? ' pp-podium-card--exp' : '')
+  const a11y = card ? ' role="button" tabindex="0" aria-expanded="false"' : ''
   return (
-    `<div class="pp-podium-card${isFirst ? ' pp-podium-card--first' : ''}" data-entry-id="${row.entry.id}">` +
+    `<div class="${cls}" data-entry-id="${row.entry.id}"${a11y}>` +
     flag +
     `<div class="pp-rank-chip" style="width:${chipSize}px;height:${chipSize}px;background:${color};font-size:${chipFont}px;margin-bottom:10px">${row.rank}</div>` +
     `<div class="pp-podium-name" style="${accent}">${esc(row.entry.name)}</div>` +
     team +
     `<div class="pp-podium-score" style="${accent}font-size:${scoreFont}px" data-role="score">${row.entry.strokes}</div>` +
     `<div class="pp-podium-unit">Schläge</div>` +
+    card +
     `</div>`
   )
 }
 
-function renderPodium(top: RankedRow[]): string {
+function renderPodium(top: RankedRow[], perHole: boolean): string {
   const first = top[0]
   const second = top[1]
   const third = top[2]
   const cards: string[] = []
-  if (second) cards.push(podiumCard(second, false))
-  if (first) cards.push(podiumCard(first, true))
-  if (third) cards.push(podiumCard(third, false))
+  if (second) cards.push(podiumCard(second, false, perHole))
+  if (first) cards.push(podiumCard(first, true, perHole))
+  if (third) cards.push(podiumCard(third, false, perHole))
   return cards.join('')
 }
 
@@ -107,11 +145,17 @@ function moveHtml(row: RankedRow): string {
   return ''
 }
 
-function listRow(row: RankedRow): string {
+function listRow(row: RankedRow, perHole: boolean): string {
   const team = row.entry.team ? `<span class="pp-row-team">${esc(row.entry.team)}</span>` : ''
   const tie = row.tied ? '<span class="pp-tie">geteilt</span>' : ''
+  const card = perHole ? scorecardHtml(row.entry.holeStrokes, row.entry.strokes) : ''
+  // Expandable only when there's a scorecard to reveal; plain row otherwise.
+  const cls = card ? 'pp-row pp-row--exp' : 'pp-row'
+  const a11y = card ? ' role="button" tabindex="0" aria-expanded="false"' : ''
+  const caret = card ? '<span class="pp-row-caret" aria-hidden="true">▾</span>' : ''
+  const detail = card ? `<div class="pp-row-card">${card}</div>` : ''
   return (
-    `<div class="pp-row" data-entry-id="${row.entry.id}">` +
+    `<div class="${cls}" data-entry-id="${row.entry.id}"${a11y}>` +
     `<span class="pp-row-rank">${row.rank}</span>` +
     ballHtml(14) +
     `<span class="pp-row-name">${esc(row.entry.name)}</span>` +
@@ -119,12 +163,14 @@ function listRow(row: RankedRow): string {
     tie +
     moveHtml(row) +
     `<span class="pp-row-score" data-role="score">${row.entry.strokes}</span>` +
+    caret +
+    detail +
     `</div>`
   )
 }
 
-function renderList(rest: RankedRow[]): string {
-  return rest.map(listRow).join('')
+function renderList(rest: RankedRow[], perHole: boolean): string {
+  return rest.map((r) => listRow(r, perHole)).join('')
 }
 
 function qrAside(entryUrl: string, updatedAt: number): string {
@@ -133,6 +179,28 @@ function qrAside(entryUrl: string, updatedAt: number): string {
     `<div class="pp-qr" style="width:132px;height:132px;padding:11px;border-radius:14px">${qrSvg(entryUrl, { module: 4 })}</div>` +
     `<div class="pp-h" style="font-weight:700;font-size:14px;color:#FFFDF8;margin-top:12px">Scan &amp; mitspielen</div>` +
     `<div class="pp-mono pp-updated" data-ts="${updatedAt}" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:4px">aktualisiert gerade eben</div>` +
+    `</div>`
+  )
+}
+
+// Shown in place of the QR when the game is locked/archived. Mirrors the QR
+// box's footprint so the board layout doesn't shift when toggling status. Does
+// NOT reuse the `.pp-qr` class — its `svg { width:100% }` rule would blow up the
+// little lock glyph.
+function lockedAside(updatedAt: number): string {
+  const lock =
+    `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">` +
+    `<rect x="4" y="10.5" width="16" height="10.5" rx="2.4" fill="#16261F"/>` +
+    `<path d="M7.3 10.5V7.4a4.7 4.7 0 0 1 9.4 0v3.1" stroke="#16261F" stroke-width="2.2" fill="none"/>` +
+    `<circle cx="12" cy="15.2" r="1.7" fill="#FFFDF8"/>` +
+    `</svg>`
+  return (
+    `<div class="pp-board-aside">` +
+    `<div style="width:132px;height:132px;box-sizing:border-box;padding:14px;border-radius:14px;background:var(--pp-card);box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">` +
+    lock +
+    `<div class="pp-h" style="font-weight:700;font-size:13px;color:var(--pp-ink);text-align:center;line-height:1.25">Eintragen<br>geschlossen</div>` +
+    `</div>` +
+    `<div class="pp-mono pp-updated" data-ts="${updatedAt}" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:12px">aktualisiert gerade eben</div>` +
     `</div>`
   )
 }

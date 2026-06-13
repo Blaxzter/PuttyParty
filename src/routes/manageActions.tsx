@@ -156,6 +156,8 @@ export async function updateGameSettingsOrStatus(c: Ctx, game: Game, targets: Ma
       teamsEnabled: parsed.data.teamsEnabled,
       status: parsed.data.status,
     })
+    // The edit modal can flip status, so refresh live boards (QR ↔ closed hint).
+    await broadcast(c, game)
     c.header('HX-Redirect', targets.basePath)
     return c.body(null, 200)
   }
@@ -165,6 +167,8 @@ export async function updateGameSettingsOrStatus(c: Ctx, game: Game, targets: Ma
     return c.text('bad_request', 400)
   }
   const updated = (await updateGame(db, game.publicId, { status: next })) ?? game
+  // Push the status change to any live board so the QR/CTA appears or disappears.
+  await broadcast(c, updated)
   if (next === 'archived') {
     c.header('HX-Redirect', targets.onArchive)
     return c.body(null, 200)

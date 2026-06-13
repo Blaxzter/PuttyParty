@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 96" fill="none" role="img" aria-hidden="true">
+  <!-- Minigolf straight lane with a tunnel/bridge obstacle + red flag. Muted. -->
+  <rect x="10" y="26" width="164" height="44" rx="22"
+        fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.4"/>
+  <path d="M40 48 L150 48" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.6"
+        stroke-linecap="round" stroke-dasharray="1 7"/>
+  <!-- tee + ball -->
+  <circle cx="34" cy="48" r="8" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.4"/>
+  <circle cx="34" cy="48" r="4.5" fill="#ffffff" fill-opacity="0.55"/>
+  <!-- tunnel / bridge block -->
+  <rect x="80" y="34" width="32" height="6" rx="3" fill="#ffffff" fill-opacity="0.14"/>
+  <rect x="84" y="36" width="24" height="30" rx="4"
+        fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.2"/>
+  <rect x="91" y="46" width="10" height="20" rx="5" fill="#0b1d13" fill-opacity="0.16"/>
+  <!-- cup + flag -->
+  <ellipse cx="150" cy="49" rx="6" ry="4.6" fill="#0b1d13" fill-opacity="0.22"/>
+  <rect x="149" y="30" width="2.2" height="19" rx="1.1" fill="#ffffff" fill-opacity="0.24"/>
+  <path d="M151.2 31 l15 4.5 -15 4.5 z" fill="#e2533b" fill-opacity="0.34"/>
+</svg>

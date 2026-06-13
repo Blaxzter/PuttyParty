@@ -9,6 +9,8 @@ export interface RankableEntry {
   name: string
   team: string | null
   strokes: number
+  /** Per-hole strokes for per_hole games; null for total-entry games. */
+  holeStrokes?: number[] | null
 }
 
 export interface Standing {

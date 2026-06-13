@@ -1,5 +1,6 @@
 import type { Child, FC } from 'hono/jsx'
 import type { Game } from '../db/schema'
+import { isoToGerman } from '../lib/dates'
 
 // ---- Brand icons ----
 
@@ -50,6 +51,33 @@ export const BrandBadge: FC<{ size?: number; withBall?: boolean; bg?: string }> 
       />
     ) : null}
   </span>
+)
+
+/** Winner's trophy (Lucide-style outline) — for closed-round / leaderboard moments. */
+export const TrophyMark: FC<{ size?: number; color?: string; style?: string }> = ({
+  size = 36,
+  color = 'var(--pp-gold)',
+  style,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    style={`display:block;${style ?? ''}`}
+  >
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
 )
 
 // ---- Status pill ----
@@ -109,6 +137,60 @@ export const Field: FC<FieldProps> = (p) => (
     {p.error ? <FieldError message={p.error} /> : null}
   </label>
 )
+
+// ---- Themed date field ----
+// Renders a typeable TT.MM.JJJJ text input plus a flag button that opens the
+// mini-golf themed calendar popover (built client-side in src/client/admin.ts).
+// The input itself carries the value, so it degrades to a plain typeable field
+// without JS and the server keeps accepting ISO or German dates.
+
+export interface DateFieldProps {
+  name: string
+  label: string
+  required?: boolean
+  optional?: boolean
+  value?: string
+  error?: string
+}
+
+export const DateField: FC<DateFieldProps> = (p) => {
+  const raw = (p.value ?? '').trim()
+  // Stored values are ISO (YYYY-MM-DD); show them in German. A failed submit may
+  // echo back whatever was typed — keep that verbatim so the user can fix it.
+  const display = isoToGerman(raw) || raw
+  return (
+    <label class="pp-label">
+      <span>
+        {p.label} {p.required ? <span class="pp-req">*</span> : null}
+        {p.optional ? <span class="pp-opt">(optional)</span> : null}
+      </span>
+      <div class="pp-datepicker" data-datepicker>
+        <input
+          name={p.name}
+          type="text"
+          value={display}
+          placeholder="TT.MM.JJJJ"
+          inputmode="numeric"
+          autocomplete="off"
+          data-dp-input
+          aria-invalid={p.error ? 'true' : undefined}
+          class={`pp-input pp-datepicker__input ${p.error ? 'pp-input--invalid' : ''}`}
+        />
+        <button
+          type="button"
+          class="pp-datepicker__btn"
+          data-dp-toggle
+          aria-label="Kalender öffnen"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+        >
+          <span class="pp-datepicker__flag" aria-hidden="true" />
+        </button>
+      </div>
+      {p.error ? <FieldError message={p.error} /> : null}
+    </label>
+  )
+}
 
 // ---- QR (served by the public /qr route) ----
 

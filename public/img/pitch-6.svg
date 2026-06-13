@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 100" fill="none" role="img" aria-hidden="true">
+  <!-- Minigolf lane with a loop-the-loop gimmick + gold flag. Muted. -->
+  <rect x="10" y="34" width="164" height="44" rx="22"
+        fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.4"/>
+  <path d="M40 56 L150 56" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.6"
+        stroke-linecap="round" stroke-dasharray="1 7"/>
+  <!-- ramp into the loop -->
+  <path d="M70 78 L88 78 L88 54 Z" fill="#ffffff" fill-opacity="0.1"/>
+  <!-- loop -->
+  <circle cx="94" cy="38" r="14" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2.6" fill="none"/>
+  <!-- tee + ball -->
+  <circle cx="34" cy="56" r="8" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.4"/>
+  <circle cx="34" cy="56" r="4.5" fill="#ffffff" fill-opacity="0.55"/>
+  <!-- cup + flag -->
+  <ellipse cx="150" cy="57" rx="6" ry="4.6" fill="#0b1d13" fill-opacity="0.22"/>
+  <rect x="149" y="38" width="2.2" height="19" rx="1.1" fill="#ffffff" fill-opacity="0.24"/>
+  <path d="M151.2 39 l15 4.5 -15 4.5 z" fill="#f2c14e" fill-opacity="0.36"/>
+</svg>

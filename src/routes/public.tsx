@@ -127,7 +127,12 @@ publicRoutes.get('/:publicId/board/state', async (c) => {
   const entries = await listEntries(getDb(c.env), game.id)
   const rows = diffStandings(null, computeStandings(toRankable(entries)))
   const updatedAt = Date.now()
-  const rendered = renderStandings(rows, { entryUrl: entryUrlFor(c.env, game.publicId), updatedAt })
+  const rendered = renderStandings(rows, {
+    entryUrl: entryUrlFor(c.env, game.publicId),
+    updatedAt,
+    locked: game.status !== 'open',
+    perHole: game.entryMode === 'per_hole',
+  })
   return c.json({
     type: 'standings',
     html: rendered.html,

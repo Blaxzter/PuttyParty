@@ -3,7 +3,7 @@ import type { Game } from '../../db/schema'
 import { formatGermanLong } from '../../lib/dates'
 import type { Placement } from '../../lib/ranking'
 import { Layout } from '../layout'
-import { Confetti, Field, FieldError, FlagMark } from '../primitives'
+import { Confetti, Field, FieldError, FlagMark, TrophyMark } from '../primitives'
 
 export interface EntryFormValues {
   name?: string
@@ -217,10 +217,8 @@ export const EntrySuccessScreen: FC<{
 export const EntryLockedScreen: FC<{ game: Game }> = ({ game }) => (
   <div id="pp-entry-screen" class="pp-screen">
     <div style="padding:44px 28px 38px;text-align:center">
-      <div style="width:72px;height:72px;margin:0 auto 20px;border-radius:50%;background:#ECE9DF;border:1px solid #ddd6c4;display:flex;align-items:center;justify-content:center">
-        <div style="width:26px;height:22px;border:3.5px solid #6B7B6E;border-radius:6px;border-top-color:transparent;position:relative">
-          <span style="position:absolute;left:50%;top:-16px;transform:translateX(-50%);width:18px;height:18px;border:3.5px solid #6B7B6E;border-bottom:none;border-radius:10px 10px 0 0"></span>
-        </div>
+      <div style="width:72px;height:72px;margin:0 auto 20px;border-radius:50%;background:#FBF3DD;border:1px solid #EBD9A8;display:flex;align-items:center;justify-content:center">
+        <TrophyMark size={36} />
       </div>
       <h1
         class="pp-h"

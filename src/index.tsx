@@ -4,6 +4,7 @@ import { adminRoutes } from './routes/admin'
 import { manageRoutes } from './routes/manage'
 import { publicRoutes } from './routes/public'
 import { siteRoutes } from './routes/site'
+import { NotFoundPage } from './ui/NotFound'
 
 // The Durable Object class must be exported from the Worker entrypoint.
 export { GameRoom } from './do/GameRoom'
@@ -23,5 +24,9 @@ app.route('/g', publicRoutes)
 
 // Org admin (behind Cloudflare Access + in-Worker JWT verification).
 app.route('/admin', adminRoutes)
+
+// Any unmatched path (e.g. /g/:publicId/admin) gets the branded 404 instead of
+// Hono's bare "404 Not Found" plain-text fallback.
+app.notFound((c) => c.html(<NotFoundPage />, 404))
 
 export default app

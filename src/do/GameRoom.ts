@@ -41,11 +41,17 @@ export class GameRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client })
   }
 
-  private async loadEntries(publicId: string): Promise<RankableEntry[]> {
+  private async loadState(
+    publicId: string,
+  ): Promise<{ entries: RankableEntry[]; locked: boolean; perHole: boolean }> {
     const db = getDb(this.env)
     const game = await getGameByPublicId(db, publicId)
-    if (!game) return []
-    return toRankable(await listEntries(db, game.id))
+    if (!game) return { entries: [], locked: false, perHole: false }
+    return {
+      entries: toRankable(await listEntries(db, game.id)),
+      locked: game.status !== 'open',
+      perHole: game.entryMode === 'per_hole',
+    }
   }
 
   /**
@@ -56,13 +62,15 @@ export class GameRoom extends DurableObject<Env> {
   private async render(
     entries: RankableEntry[],
     entryUrl: string,
+    locked: boolean,
+    perHole: boolean,
     updatePrev: boolean,
   ): Promise<StandingsMessage> {
     const prev = (await this.ctx.storage.get<Standing[]>('prev')) ?? null
     const next = computeStandings(entries)
     const rows = diffStandings(prev, next)
     const updatedAt = Date.now()
-    const rendered = renderStandings(rows, { entryUrl, updatedAt })
+    const rendered = renderStandings(rows, { entryUrl, updatedAt, locked, perHole })
     const message: StandingsMessage = {
       type: 'standings',
       html: rendered.html,
@@ -79,7 +87,8 @@ export class GameRoom extends DurableObject<Env> {
    * from D1, diffs movement vs the stored snapshot, renders, persists, broadcasts.
    */
   async update(publicId: string, entryUrl: string): Promise<StandingsMessage> {
-    const message = await this.render(await this.loadEntries(publicId), entryUrl, true)
+    const { entries, locked, perHole } = await this.loadState(publicId)
+    const message = await this.render(entries, entryUrl, locked, perHole, true)
     this.broadcast(message)
     return message
   }
@@ -90,7 +99,8 @@ export class GameRoom extends DurableObject<Env> {
    * reflects the source of truth even if D1 changed out-of-band (e.g. seeding).
    */
   async sync(publicId: string, entryUrl: string): Promise<StandingsMessage> {
-    return this.render(await this.loadEntries(publicId), entryUrl, false)
+    const { entries, locked, perHole } = await this.loadState(publicId)
+    return this.render(entries, entryUrl, locked, perHole, false)
   }
 
   broadcast(message: StandingsMessage): void {

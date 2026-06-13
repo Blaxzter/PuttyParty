@@ -1,6 +1,6 @@
 import type { FC } from "hono/jsx";
 import type { Game } from "../../db/schema";
-import { Field } from "../primitives";
+import { DateField, Field } from "../primitives";
 
 export interface GameFormValues {
     name?: string;
@@ -81,10 +81,9 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
                                 error={errors.name}
                             />
                         </div>
-                        <Field
+                        <DateField
                             name="date"
                             label="Datum"
-                            type="date"
                             required
                             value={v.date}
                             error={errors.date}

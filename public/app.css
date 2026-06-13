@@ -328,6 +328,18 @@ body {
     border-color: var(--pp-flag);
     color: var(--pp-red-text);
 }
+/* Drop the native spinner arrows on number fields — nobody taps them and they
+   clutter the score inputs. The numeric keypad still shows on mobile via the
+   inputmode="numeric" hint. */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 .pp-field-error {
     display: flex;
     align-items: center;
@@ -423,10 +435,64 @@ body {
    ========================================================================== */
 .pp-body--entry {
     min-height: 100svh;
-    background: var(--pp-turf-grad);
+    /* A few muted minigolf pitches scattered behind the card so the turf isn't
+       bare. Listed before the gradient so they layer on top of it; the opaque
+       entry card covers the center, so they only peek through the margins.
+       Purely decorative (the SVGs are aria-hidden). The /board view keeps its
+       own --pp-turf-grad-board and is intentionally left clean. */
+    background-image:
+        url("/img/pitch-1.svg"),
+        url("/img/pitch-3.svg"),
+        url("/img/pitch-5.svg"),
+        url("/img/pitch-2.svg"),
+        var(--pp-turf-grad);
+    background-repeat: no-repeat;
+    background-position:
+        left -28px top 7%,
+        right -24px top 13%,
+        left -20px bottom 11%,
+        right -34px bottom 8%,
+        center;
+    background-size:
+        175px auto,
+        175px auto,
+        150px auto,
+        150px auto,
+        cover;
     display: grid;
     place-items: center;
     padding: 20px;
+}
+/* On wide screens the four corner pitches strand themselves in the far corners
+   and read as specks, leaving the middle bare. Swap in a richer set: six larger
+   pitches in three tiers per side, pulled inward to flank the centered card. */
+@media (min-width: 900px) {
+    .pp-body--entry {
+        background-image:
+            url("/img/pitch-1.svg"),
+            url("/img/pitch-3.svg"),
+            url("/img/pitch-5.svg"),
+            url("/img/pitch-2.svg"),
+            url("/img/pitch-6.svg"),
+            url("/img/pitch-4.svg"),
+            var(--pp-turf-grad);
+        background-position:
+            left 6% top 13%,
+            right 7% top 17%,
+            left 9% bottom 13%,
+            right 7% bottom 11%,
+            left 19% center,
+            right 18% center,
+            center;
+        background-size:
+            250px auto,
+            250px auto,
+            225px auto,
+            215px auto,
+            250px auto,
+            245px auto,
+            cover;
+    }
 }
 .pp-screen {
     width: 100%;
@@ -492,9 +558,19 @@ body {
     padding: 16px 4px 8px;
     outline: none;
     font-feature-settings: "tnum" 1;
+    transition:
+        border-color 0.12s ease,
+        background 0.12s ease,
+        box-shadow 0.12s ease;
+}
+/* A hole that's been filled in reads as "done" — subtle turf tint + accent. */
+.pp-hole input:not(:placeholder-shown) {
+    background: var(--pp-card);
+    border-color: var(--pp-turf-from);
 }
 .pp-hole input:focus {
     border-color: var(--pp-turf-from);
+    box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.16);
 }
 .pp-hole-total {
     display: flex;
@@ -513,6 +589,9 @@ body {
     overflow: hidden;
     background: var(--pp-turf-grad-board);
 }
+/* Kiosk frame: header + podium are fixed; the list panel scrolls inside it
+   (.pp-board-list overflow-y:auto). The mobile fallback below unlocks this to a
+   normal scrolling page. */
 .pp-board {
     height: 100svh;
     display: flex;
@@ -524,9 +603,23 @@ body {
 .pp-board-top {
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: clamp(16px, 2.4vw, 30px) clamp(20px, 3vw, 40px) 14px;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    padding: clamp(16px, 2.4vw, 30px) clamp(20px, 3vw, 40px) 31px;
     z-index: 3;
+}
+/* Title block takes the slack and is allowed to shrink (min-width:0) so a long
+   tournament name wraps within its column instead of shoving the LIVE/count
+   cluster off-screen. That cluster wraps to its own line on narrow widths. */
+.pp-board-headline {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.pp-board-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 .pp-board-title {
     font-family: var(--font-head);
@@ -581,21 +674,29 @@ body {
     justify-content: center;
     gap: clamp(10px, 1.6vw, 18px);
     padding: clamp(8px, 1.5vw, 14px) clamp(20px, 3vw, 40px) 0;
-    z-index: 3;
+    /* Sit above the list panel so the cards' shadows fall onto it, not behind it. */
+    position: relative;
+    z-index: 4;
 }
+/* The podium reads as floating tiles on the turf (fully rounded + a soft drop
+   shadow), with a clear gap to the list below — rather than trying to stand on
+   the translucent list panel, which let the cards ghost through it. */
 .pp-podium-card {
     width: clamp(150px, 18vw, 248px);
     background: var(--pp-cream);
-    border-radius: 18px 18px 0 0;
+    border-radius: 18px;
     padding: 18px 18px 22px;
     text-align: center;
+    box-shadow: 0 16px 30px rgba(12, 30, 20, 0.32);
 }
 .pp-podium-card--first {
     width: clamp(170px, 20vw, 272px);
     background: var(--pp-card);
     padding: 24px 20px 26px;
     border-top: 4px solid var(--pp-gold);
-    box-shadow: 0 -6px 24px rgba(216, 167, 43, 0.35);
+    box-shadow:
+        0 18px 34px rgba(12, 30, 20, 0.36),
+        0 -6px 24px rgba(216, 167, 43, 0.35);
     position: relative;
 }
 .pp-rank-chip {
@@ -638,7 +739,8 @@ body {
     display: flex;
     gap: 24px;
     padding: 0 clamp(20px, 3vw, 40px);
-    z-index: 3;
+    /* Clear gap below the floating podium. */
+    margin-top: clamp(10px, 1.6vw, 18px);
     min-height: 0;
 }
 .pp-board-list {
@@ -648,7 +750,21 @@ body {
     padding: 8px 22px 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* Header + podium stay put; the leaderboard scrolls inside its own panel. */
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(22, 38, 31, 0.25) transparent;
+}
+.pp-board-list::-webkit-scrollbar {
+    width: 8px;
+}
+.pp-board-list::-webkit-scrollbar-thumb {
+    background: rgba(22, 38, 31, 0.22);
+    border-radius: 8px;
+}
+.pp-board-list::-webkit-scrollbar-track {
+    background: transparent;
 }
 .pp-row {
     display: flex;
@@ -715,6 +831,85 @@ body {
     color: var(--pp-red-text);
 }
 
+/* ---- Per-hole expandable scorecard (per_hole games only) ---- */
+/* Expandable list rows wrap so the scorecard drops onto its own line. */
+.pp-row--exp {
+    flex-wrap: wrap;
+    cursor: pointer;
+}
+.pp-row--exp:focus-visible,
+.pp-podium-card--exp:focus-visible {
+    outline: 2px solid var(--pp-turf-from);
+    outline-offset: 2px;
+}
+.pp-row-caret {
+    font-family: var(--font-body);
+    font-size: 12px;
+    line-height: 1;
+    color: var(--pp-text-faint);
+    margin-left: 10px;
+    transition: transform 0.15s ease;
+}
+.pp-row--exp.pp-open .pp-row-caret {
+    transform: rotate(180deg);
+}
+.pp-podium-card--exp {
+    cursor: pointer;
+}
+
+/* Scorecard detail: collapsed until the row/card carries .pp-open. */
+.pp-row-card {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2dac4;
+}
+.pp-row--exp.pp-open .pp-row-card {
+    display: block;
+}
+.pp-podium-card .pp-scorecard {
+    display: none;
+    margin-top: 12px;
+    justify-content: center;
+}
+.pp-podium-card--exp.pp-open .pp-scorecard {
+    display: flex;
+}
+.pp-scorecard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.pp-sc-cell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 26px;
+    padding: 3px 5px;
+    border-radius: 7px;
+    background: rgba(22, 38, 31, 0.05);
+}
+.pp-sc-cell b {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 9px;
+    color: var(--pp-text-faint);
+}
+.pp-sc-cell i {
+    font-family: var(--font-score);
+    font-style: normal;
+    font-size: 15px;
+    line-height: 1.1;
+    color: var(--pp-ink);
+}
+.pp-sc-cell--total {
+    background: rgba(242, 193, 78, 0.22);
+}
+.pp-sc-cell--total i {
+    color: var(--pp-turf-to);
+}
+
 .pp-board-aside {
     width: 200px;
     flex: none;
@@ -750,6 +945,19 @@ body {
     z-index: 3;
 }
 
+/* Empty board: float the message across the full board width so it sits
+   dead-center, while the QR aside keeps its normal bottom-right spot. Without
+   this the message centers only in the flex:1 column left of the QR, shoving it
+   off to the left. */
+.pp-board-body--empty {
+    position: relative;
+    justify-content: flex-end;
+}
+.pp-board-body--empty .pp-board-empty {
+    position: absolute;
+    inset: 0;
+}
+
 /* Board confetti accent on the leader */
 .pp-board-confetti {
     position: absolute;
@@ -759,6 +967,9 @@ body {
     height: 200px;
     pointer-events: none;
     z-index: 4;
+}
+.pp-board-confetti--hidden {
+    display: none;
 }
 
 /* Mobile board fallback: stack podium + list, hide the QR aside column. */
@@ -771,6 +982,14 @@ body {
     }
     .pp-board-body {
         flex-direction: column;
+    }
+    /* Whole page scrolls on mobile, so the list flows instead of scrolling itself.
+       The QR sits below it now, so round the bottom too (no longer flush to the
+       screen edge) and pad the last row off the rounded corner. */
+    .pp-board-list {
+        overflow: visible;
+        border-radius: 14px;
+        padding-bottom: 10px;
     }
     .pp-board-aside {
         width: 100%;
@@ -1111,6 +1330,221 @@ body {
     margin-left: auto;
 }
 
+/* ---- Themed date picker (calendar popover) ---- */
+.pp-datepicker {
+    position: relative;
+}
+.pp-datepicker__input {
+    padding-right: 50px;
+}
+.pp-datepicker__btn {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 9px;
+    background: var(--pp-turf-grad);
+    color: var(--pp-cream);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(20, 68, 47, 0.25);
+    transition: filter 0.12s ease;
+}
+.pp-datepicker__btn:hover {
+    filter: brightness(1.07);
+}
+.pp-datepicker__btn:focus-visible {
+    outline: 2px solid var(--pp-turf-from);
+    outline-offset: 2px;
+}
+/* A little waving flag, echoing the brand mark. */
+.pp-datepicker__flag {
+    position: relative;
+    width: 15px;
+    height: 15px;
+}
+.pp-datepicker__flag::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 2px;
+    height: 13px;
+    background: currentColor;
+    border-radius: 1px;
+}
+.pp-datepicker__flag::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 1px;
+    width: 8px;
+    height: 6px;
+    background: currentColor;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.pp-cal {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 30;
+    width: 300px;
+    max-width: calc(100vw - 40px);
+    background: var(--pp-card);
+    border: 1.5px solid var(--pp-border-cream);
+    border-radius: 16px;
+    box-shadow: 0 18px 44px rgba(20, 38, 31, 0.22);
+    overflow: hidden;
+    animation: pp-cal-in 0.14s ease-out;
+}
+@keyframes pp-cal-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.pp-cal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px;
+    background: var(--pp-turf-grad);
+    color: var(--pp-cream);
+}
+.pp-cal__title {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.2px;
+}
+.pp-cal__nav {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.16);
+    color: var(--pp-cream);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+.pp-cal__nav:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+.pp-cal__nav:focus-visible {
+    outline: 2px solid var(--pp-cream);
+    outline-offset: 1px;
+}
+.pp-cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    padding: 10px 12px 4px;
+}
+.pp-cal__wd {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--pp-text-faint);
+    padding-bottom: 4px;
+}
+.pp-cal__day {
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--pp-ink);
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    position: relative;
+    transition:
+        background 0.1s ease,
+        color 0.1s ease;
+}
+.pp-cal__day:hover {
+    background: var(--pp-cream);
+}
+.pp-cal__day--we {
+    color: var(--pp-text-soft);
+}
+.pp-cal__day--out {
+    color: var(--pp-text-faint);
+    opacity: 0.55;
+}
+.pp-cal__day--today {
+    box-shadow: inset 0 0 0 1.5px var(--pp-turf-from);
+    color: var(--pp-green-text);
+}
+/* Golf-ball dot under today's number. */
+.pp-cal__day--today::after {
+    content: "";
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--pp-turf-from);
+}
+.pp-cal__day--selected,
+.pp-cal__day--selected:hover {
+    background: var(--pp-flag);
+    color: #fff;
+    box-shadow: 0 2px 0 var(--pp-flag-press);
+}
+.pp-cal__day--selected::after {
+    display: none;
+}
+.pp-cal__day:focus-visible {
+    outline: 2px solid var(--pp-turf-from);
+    outline-offset: 1px;
+}
+.pp-cal__foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 6px 12px 12px;
+}
+.pp-cal__today-btn {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--pp-green-text);
+    background: var(--pp-cream);
+    border: 1.5px solid var(--pp-border-input);
+    border-radius: 9px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+.pp-cal__today-btn:hover {
+    background: #eef3ea;
+}
+
 /* ---- Print: entry QR sheet (admin "Drucken") ---- */
 .pp-print-only {
     display: none;
@@ -1164,7 +1598,26 @@ body {
 }
 
 .pp-hero {
-    background: var(--pp-turf-grad);
+    /* Same muted minigolf pitches as the entry screen, tucked into the band's
+       corners and bottom edge so they accent the turf without crowding the
+       headline (top-left) or the screenshot (right column). Decorative only —
+       the SVGs are aria-hidden. */
+    background-image:
+        url("/img/pitch-5.svg"),
+        url("/img/pitch-2.svg"),
+        url("/img/pitch-4.svg"),
+        var(--pp-turf-grad);
+    background-repeat: no-repeat;
+    background-position:
+        left -34px top -8px,
+        left 3% bottom -22px,
+        right 4% bottom -18px,
+        center;
+    background-size:
+        170px auto,
+        205px auto,
+        195px auto,
+        cover;
     color: var(--pp-cream);
 }
 .pp-hero-inner {
@@ -1296,7 +1749,22 @@ body {
 }
 
 .pp-cta-band {
-    background: var(--pp-turf-grad);
+    /* Decorative pitches flank the centred call-to-action in the otherwise
+       empty green margins. Dropped on narrow screens (see media query) where
+       they'd sit under the text. */
+    background-image:
+        url("/img/pitch-1.svg"),
+        url("/img/pitch-6.svg"),
+        var(--pp-turf-grad);
+    background-repeat: no-repeat;
+    background-position:
+        left 5% center,
+        right 5% center,
+        center;
+    background-size:
+        205px auto,
+        205px auto,
+        cover;
     color: var(--pp-cream);
     text-align: center;
 }
@@ -1339,5 +1807,11 @@ body {
     }
     .pp-steps {
         grid-template-columns: 1fr;
+    }
+    /* The flanking CTA pitches would sit under the centred text once the band
+       narrows; keep just the gradient there. The hero's corner pitches stay —
+       they hug the edges and read fine on phones. */
+    .pp-cta-band {
+        background: var(--pp-turf-grad);
     }
 }

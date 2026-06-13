@@ -13,6 +13,7 @@ const board = document.querySelector<HTMLElement>('.pp-board')
 const publicId = board?.dataset.publicId
 const live = document.getElementById('pp-board-live')
 const participantsEl = document.getElementById('pp-participants')
+const confetti = document.querySelector<HTMLElement>('.pp-board-confetti')
 
 function relTime(ts: number): string {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000))
@@ -31,6 +32,54 @@ function tickUpdated(): void {
   }
 }
 
+// Per-hole games: rows/podium cards expand to a scorecard. Which entries are
+// open is tracked by id so the state survives the innerHTML swap on every live
+// update (a new score otherwise collapses what the viewer was looking at).
+const EXP_SELECTOR = '.pp-row--exp, .pp-podium-card--exp'
+const expanded = new Set<number>()
+
+function entryIdOf(el: HTMLElement): number | null {
+  const id = Number(el.dataset.entryId)
+  return Number.isFinite(id) ? id : null
+}
+
+function setOpen(el: HTMLElement, open: boolean): void {
+  el.classList.toggle('pp-open', open)
+  el.setAttribute('aria-expanded', open ? 'true' : 'false')
+}
+
+function toggleExpand(el: HTMLElement): void {
+  const id = entryIdOf(el)
+  if (id == null) return
+  const open = !expanded.has(id)
+  if (open) expanded.add(id)
+  else expanded.delete(id)
+  setOpen(el, open)
+}
+
+function restoreExpanded(): void {
+  if (!live) return
+  for (const el of live.querySelectorAll<HTMLElement>(EXP_SELECTOR)) {
+    const id = entryIdOf(el)
+    if (id != null && expanded.has(id)) setOpen(el, true)
+  }
+}
+
+if (live) {
+  live.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>(EXP_SELECTOR)
+    if (el) toggleExpand(el)
+  })
+  live.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>(EXP_SELECTOR)
+    if (el) {
+      e.preventDefault()
+      toggleExpand(el)
+    }
+  })
+}
+
 let lastApplied = 0
 
 function apply(msg: StandingsMessage): void {
@@ -42,6 +91,10 @@ function apply(msg: StandingsMessage): void {
   lastApplied = msg.updatedAt
   if (live) live.innerHTML = msg.html
   if (participantsEl) participantsEl.textContent = String(msg.participants)
+  // Confetti lives in the static shell (outside #pp-board-live), so toggle it
+  // here: no participants → no podium → no confetti.
+  if (confetti) confetti.classList.toggle('pp-board-confetti--hidden', msg.participants === 0)
+  restoreExpanded()
   tickUpdated()
 }
 
