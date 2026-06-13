@@ -35,7 +35,13 @@ export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
   }
 })
 
-/** Cloudflare Access logout URL (clears the Access session). */
-export function accessLogoutUrl(teamDomain: string): string {
-  return teamDomain ? `https://${teamDomain}/cdn-cgi/access/logout` : '/cdn-cgi/access/logout'
+/**
+ * Cloudflare Access logout URL (clears the Access session). Built on the app's
+ * own domain — per Cloudflare's docs this deletes the app cookie directly (more
+ * instantaneous) — and carries a `returnTo` so the user lands back on the public
+ * landing page (`/`, ungated) instead of Cloudflare's generic logged-out page.
+ */
+export function accessLogoutUrl(baseUrl: string): string {
+  const root = baseUrl.replace(/\/$/, '')
+  return `${root}/cdn-cgi/access/logout?returnTo=${encodeURIComponent(`${root}/`)}`
 }

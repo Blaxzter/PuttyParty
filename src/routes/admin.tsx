@@ -51,7 +51,7 @@ adminRoutes.get('/', async (c) => {
   return c.html(
     <DashboardPage
       admin={c.get('admin')}
-      logoutUrl={accessLogoutUrl(c.env.ACCESS_TEAM_DOMAIN)}
+      logoutUrl={accessLogoutUrl(baseUrl(c.env))}
       baseUrl={baseUrl(c.env)}
       games={games}
     />,
