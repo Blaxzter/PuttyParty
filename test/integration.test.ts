@@ -23,6 +23,7 @@ async function seedGame(
     entryMode: 'total',
     teamsEnabled: true,
     status: 'open',
+    locale: 'de',
     ...overrides,
   })
 }

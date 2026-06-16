@@ -4,6 +4,8 @@
     "main": "src/index.tsx",
     "compatibility_date": "2026-06-01",
     "compatibility_flags": ["nodejs_compat"],
+    // Import *.html files as their text contents (e.g. the generated Datenschutz).
+    "rules": [{ "type": "Text", "globs": ["**/*.html"] }],
     // Public client assets (CSS + bundled JS). Served before the Worker runs;
     // non-matching paths fall through to the Hono app. `html_handling: none`
     // keeps routing predictable (we have no static HTML).
@@ -48,5 +50,9 @@
     "vars": {
         "APP_BASE_URL": "https://puttyparty.fabraham.dev",
         "DEV_ADMIN_BYPASS": "false",
+        // Public Turnstile site key for the self-service create form. Safe to commit.
+        // Leave "" to disable the widget. The matching TURNSTILE_SECRET_KEY is a
+        // Worker *secret* (wrangler secret put) — never put it here.
+        "TURNSTILE_SITE_KEY": "0x4AAAAAADmDzs2xepe8HGHz",
     },
 }

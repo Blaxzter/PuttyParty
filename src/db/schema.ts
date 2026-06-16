@@ -24,6 +24,10 @@ export const games = sqliteTable(
     status: text('status', { enum: ['open', 'locked', 'archived'] })
       .notNull()
       .default('open'),
+    /** Language the board + entry page render in (chosen at creation). */
+    locale: text('locale', { enum: ['de', 'en'] })
+      .notNull()
+      .default('de'),
     createdAt: integer('created_at').notNull().default(epochMs),
     updatedAt: integer('updated_at').notNull().default(epochMs),
   },

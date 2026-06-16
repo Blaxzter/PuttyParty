@@ -3,9 +3,11 @@ import type { AppEnv, Env } from '../bindings'
 import { createEntry, getDb, getGameByPublicId, listEntries } from '../db/queries'
 import type { Game } from '../db/schema'
 import { toRankable } from '../do/protocol'
+import { getDictionary } from '../i18n'
+import { page, pageLocale } from '../i18n/render'
 import { qrSvg } from '../lib/qr'
 import { computeStandings, diffStandings, placementFor } from '../lib/ranking'
-import { fieldErrors, perHoleEntrySchema, totalEntrySchema } from '../lib/validation'
+import { fieldErrors, makeEntrySchemas } from '../lib/validation'
 import { entryUrlFor, gameRoom, notifyBoard, syncBoard } from '../realtime'
 import { BoardPage } from '../ui/board/Board'
 import { renderStandings } from '../ui/board/standings'
@@ -30,18 +32,21 @@ function baseUrl(env: Env): string {
 // ---- Entry page ----
 publicRoutes.get('/:publicId', async (c) => {
   const game = await loadGame(c.env, c.req.param('publicId'))
-  if (!game) return c.html(<NotFoundPage />, 404)
-  if (game.status !== 'open') return c.html(<EntryLockedPage game={game} />)
-  return c.html(<EntryPage game={game} />)
+  if (!game) return page(c, <NotFoundPage />, 404)
+  if (game.status !== 'open') return pageLocale(c, <EntryLockedPage game={game} />, game.locale)
+  return pageLocale(c, <EntryPage game={game} />, game.locale)
 })
 
 // ---- Submit a score ----
 publicRoutes.post('/:publicId/entries', async (c) => {
   const db = getDb(c.env)
   const game = await loadGame(c.env, c.req.param('publicId'))
-  if (!game) return c.html(<NotFoundPage />, 404)
-  if (game.status !== 'open') return c.html(<EntryLockedPage game={game} />, 423)
+  if (!game) return page(c, <NotFoundPage />, 404)
+  if (game.status !== 'open')
+    return pageLocale(c, <EntryLockedPage game={game} />, game.locale, 423)
 
+  // Validation messages render in the game's language.
+  const schemas = makeEntrySchemas(getDictionary(game.locale))
   const body = await c.req.parseBody()
   const values: EntryFormValues = {
     name: typeof body.name === 'string' ? body.name : '',
@@ -58,9 +63,15 @@ publicRoutes.post('/:publicId/entries', async (c) => {
       typeof body[`hole_${i + 1}`] === 'string' ? (body[`hole_${i + 1}`] as string) : '',
     )
     values.holes = holes
-    const parsed = perHoleEntrySchema(game.holes).safeParse({ ...values, holeStrokes: holes })
+    const parsed = schemas
+      .perHoleEntrySchema(game.holes)
+      .safeParse({ ...values, holeStrokes: holes })
     if (!parsed.success) {
-      return c.html(<EntryPage game={game} values={values} errors={fieldErrors(parsed.error)} />)
+      return pageLocale(
+        c,
+        <EntryPage game={game} values={values} errors={fieldErrors(parsed.error)} />,
+        game.locale,
+      )
     }
     name = parsed.data.name
     team = parsed.data.team
@@ -68,9 +79,13 @@ publicRoutes.post('/:publicId/entries', async (c) => {
     strokes = holeStrokes.reduce((a, b) => a + b, 0)
   } else {
     values.strokes = typeof body.strokes === 'string' ? body.strokes : ''
-    const parsed = totalEntrySchema.safeParse(values)
+    const parsed = schemas.totalEntrySchema.safeParse(values)
     if (!parsed.success) {
-      return c.html(<EntryPage game={game} values={values} errors={fieldErrors(parsed.error)} />)
+      return pageLocale(
+        c,
+        <EntryPage game={game} values={values} errors={fieldErrors(parsed.error)} />,
+        game.locale,
+      )
     }
     name = parsed.data.name
     team = parsed.data.team
@@ -94,15 +109,17 @@ publicRoutes.post('/:publicId/entries', async (c) => {
     tied: false,
     placesAhead: 0,
   }
-  return c.html(
+  return pageLocale(
+    c,
     <EntrySuccessPage game={game} name={name} strokes={strokes} placement={placement} />,
+    game.locale,
   )
 })
 
 // ---- Live board page ----
 publicRoutes.get('/:publicId/board', async (c) => {
   const game = await loadGame(c.env, c.req.param('publicId'))
-  if (!game) return c.html(<NotFoundPage />, 404)
+  if (!game) return page(c, <NotFoundPage />, 404)
   const entries = await listEntries(getDb(c.env), game.id)
   // Sync the DO cache to D1 so the board's WS replay reflects the source of truth.
   try {
@@ -110,13 +127,15 @@ publicRoutes.get('/:publicId/board', async (c) => {
   } catch {
     /* board still renders from D1 below */
   }
-  return c.html(
+  return pageLocale(
+    c,
     <BoardPage
       game={game}
       entries={toRankable(entries)}
       entryUrl={entryUrlFor(c.env, game.publicId)}
       updatedAt={Date.now()}
     />,
+    game.locale,
   )
 })
 
@@ -132,6 +151,7 @@ publicRoutes.get('/:publicId/board/state', async (c) => {
     updatedAt,
     locked: game.status !== 'open',
     perHole: game.entryMode === 'per_hole',
+    t: getDictionary(game.locale).board,
   })
   return c.json({
     type: 'standings',

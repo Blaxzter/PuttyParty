@@ -1,6 +1,7 @@
 import { asc, desc, eq, getTableColumns, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import type { Env } from '../bindings'
+import type { Locale } from '../i18n/locale'
 import { type Entry, entries, type Game, games, type NewEntry } from './schema'
 
 export type Db = ReturnType<typeof getDb>
@@ -64,6 +65,7 @@ export type CreateGameInput = {
   entryMode: 'total' | 'per_hole'
   teamsEnabled: boolean
   status: 'open' | 'locked'
+  locale: Locale
 }
 
 export async function createGame(db: Db, input: CreateGameInput): Promise<Game> {
@@ -83,6 +85,7 @@ export type UpdateGamePatch = Partial<{
   entryMode: 'total' | 'per_hole'
   teamsEnabled: boolean
   status: 'open' | 'locked' | 'archived'
+  locale: Locale
 }>
 
 export async function updateGame(

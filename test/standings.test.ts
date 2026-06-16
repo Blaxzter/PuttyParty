@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getDictionary } from '../src/i18n'
 import { computeStandings, diffStandings, type RankableEntry } from '../src/lib/ranking'
 import { renderStandings } from '../src/ui/board/standings'
 
@@ -18,7 +19,11 @@ const eh = (id: number, holeStrokes: number[]): RankableEntry => ({
 })
 
 const rowsOf = (...entries: RankableEntry[]) => diffStandings(null, computeStandings(entries))
-const OPTS = { entryUrl: 'https://example.test/g/abc', updatedAt: 1_700_000_000_000 }
+const OPTS = {
+  entryUrl: 'https://example.test/g/abc',
+  updatedAt: 1_700_000_000_000,
+  t: getDictionary('de').board,
+}
 
 describe('renderStandings — QR vs locked', () => {
   it('shows the QR and entry CTA while the game is open', () => {

@@ -1,5 +1,7 @@
 import type { Entry, Game } from '../db/schema'
-import { formatGermanLong } from '../lib/dates'
+import { getDictionary } from '../i18n'
+import type { Locale } from '../i18n/locale'
+import { formatLongDate } from '../lib/dates'
 import type { RankableEntry } from '../lib/ranking'
 
 /** Static board chrome (title + subtitle); not part of the live region. */
@@ -40,11 +42,12 @@ function parseHoleStrokes(raw: string | null): number[] | null {
   return null
 }
 
-export function boardMeta(game: Game): BoardMeta {
-  // "Bahn 1–N" only makes sense for per-hole games; a total-entry game just has
-  // a single Gesamtschläge input, so the hole range is misleading there.
-  const parts = [game.location, formatGermanLong(game.date)]
-  if (game.entryMode === 'per_hole') parts.push(`Bahn 1–${game.holes}`)
+export function boardMeta(game: Game, locale: Locale): BoardMeta {
+  // The hole range only makes sense for per-hole games; a total-entry game just
+  // has a single total input, so the range would be misleading there.
+  const t = getDictionary(locale)
+  const parts = [game.location, formatLongDate(game.date, locale)]
+  if (game.entryMode === 'per_hole') parts.push(t.board.bahnRange(game.holes))
   return {
     publicId: game.publicId,
     title: game.name,

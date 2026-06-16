@@ -2,6 +2,7 @@ import { raw } from 'hono/html'
 import type { FC } from 'hono/jsx'
 import type { Game } from '../../db/schema'
 import { boardMeta } from '../../do/protocol'
+import { useI18n } from '../../i18n'
 import { computeStandings, diffStandings, type RankableEntry } from '../../lib/ranking'
 import { Layout } from '../layout'
 import { BrandBadge } from '../primitives'
@@ -19,17 +20,23 @@ export const BoardPage: FC<{
   entryUrl: string
   updatedAt: number
 }> = ({ game, entries, entryUrl, updatedAt }) => {
-  const meta = boardMeta(game)
+  const { t, locale } = useI18n()
+  const meta = boardMeta(game, locale)
   const rows = diffStandings(null, computeStandings(entries))
   const rendered = renderStandings(rows, {
     entryUrl,
     updatedAt,
     locked: game.status !== 'open',
     perHole: game.entryMode === 'per_hole',
+    t: t.board,
   })
   return (
-    <Layout title={`${game.name} · Bestenliste`} bodyClass="pp-body--board" scripts={['/board.js']}>
-      <div class="pp-board" data-public-id={game.publicId}>
+    <Layout
+      title={`${game.name} · ${t.board.titleSuffix}`}
+      bodyClass="pp-body--board"
+      scripts={['/board.js']}
+    >
+      <div class="pp-board" data-public-id={game.publicId} data-locale={locale}>
         <div
           class={`pp-board-confetti${rows.length === 0 ? ' pp-board-confetti--hidden' : ''}`}
           aria-hidden="true"
@@ -62,7 +69,7 @@ export const BoardPage: FC<{
                 {rendered.participants}
               </div>
               <div class="pp-mono" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:3px">
-                Teilnehmer:innen
+                {t.board.participants}
               </div>
             </div>
           </div>
