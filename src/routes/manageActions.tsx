@@ -37,6 +37,7 @@ export function draftFromBody(body: Record<string, unknown>): GameFormValues {
     entryMode: body.entryMode === 'per_hole' ? 'per_hole' : 'total',
     teamsEnabled: body.teamsEnabled === 'on' || body.teamsEnabled === 'true',
     status: body.status === 'locked' ? 'locked' : 'open',
+    locale: body.locale === 'en' ? 'en' : 'de',
   }
 }
 
@@ -155,6 +156,7 @@ export async function updateGameSettingsOrStatus(c: Ctx, game: Game, targets: Ma
       entryMode: parsed.data.entryMode,
       teamsEnabled: parsed.data.teamsEnabled,
       status: parsed.data.status,
+      locale: parsed.data.locale,
     })
     // The edit modal can flip status, so refresh live boards (QR ↔ closed hint).
     await broadcast(c, game)

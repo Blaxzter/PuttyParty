@@ -13,6 +13,7 @@ const game = (over: Partial<Game> = {}): Game => ({
   entryMode: 'total',
   teamsEnabled: true,
   status: 'open',
+  locale: 'de',
   createdAt: 0,
   updatedAt: 0,
   ...over,
@@ -20,15 +21,17 @@ const game = (over: Partial<Game> = {}): Game => ({
 
 describe('boardMeta', () => {
   it('omits the "Bahn 1–N" range for total-entry games', () => {
-    expect(boardMeta(game({ entryMode: 'total' })).subtitle).not.toContain('Bahn')
+    expect(boardMeta(game({ entryMode: 'total' }), 'de').subtitle).not.toContain('Bahn')
   })
 
   it('includes the "Bahn 1–N" range for per-hole games', () => {
-    expect(boardMeta(game({ entryMode: 'per_hole', holes: 18 })).subtitle).toContain('Bahn 1–18')
+    expect(boardMeta(game({ entryMode: 'per_hole', holes: 18 }), 'de').subtitle).toContain(
+      'Bahn 1–18',
+    )
   })
 
   it('drops a missing location without leaving a stray separator', () => {
-    const sub = boardMeta(game({ location: null })).subtitle
+    const sub = boardMeta(game({ location: null }), 'de').subtitle
     expect(sub).not.toMatch(/^ · | · $|· ·/)
   })
 })

@@ -1,3 +1,4 @@
+import type { Dictionary } from '../../i18n'
 import { qrSvg } from '../../lib/qr'
 import type { RankedRow } from '../../lib/ranking'
 import { medalColor } from '../tokens'
@@ -5,7 +6,11 @@ import { medalColor } from '../tokens'
 // Plain HTML-string renderer for the live board region (#pp-board-live). Used by
 // the initial server render, the JSON state endpoint, AND the GameRoom DO
 // broadcast, so all three are byte-identical. User text is HTML-escaped here
-// (no JSX auto-escape in raw strings).
+// (no JSX auto-escape in raw strings). All board copy comes from the game's
+// locale dictionary (passed in as `t`), since the rendered HTML is shared across
+// every connected screen.
+
+type Board = Dictionary['board']
 
 const ESC: Record<string, string> = {
   '&': '&amp;',
@@ -22,6 +27,8 @@ export interface StandingsRenderOpts {
   /** Absolute URL to the entry page, encoded in the board's QR. */
   entryUrl: string
   updatedAt: number
+  /** Board copy in the game's language. */
+  t: Board
   /**
    * When the game isn't accepting entries (status !== 'open'), the QR + CTA are
    * replaced with a "closed" hint — scanning would otherwise dead-end on the
@@ -42,24 +49,27 @@ export interface RenderedStandings {
 
 /** Renders the full inner HTML of #pp-board-live for the given ranked rows. */
 export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): RenderedStandings {
-  const aside = opts.locked ? lockedAside(opts.updatedAt) : qrAside(opts.entryUrl, opts.updatedAt)
+  const { t } = opts
+  const aside = opts.locked
+    ? lockedAside(opts.updatedAt, t)
+    : qrAside(opts.entryUrl, opts.updatedAt, t)
   // Mobile-only CTA: on the phone showing the board, the QR is useless, so the
   // design swaps it for a direct entry link (hidden on the big screen via CSS).
   // Dropped when locked — there's nowhere useful to send the tap.
   const cta = opts.locked
     ? ''
-    : `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">＋ Eigenen Score eintragen</a>`
+    : `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">${esc(t.ctaOwnScore)}</a>`
   if (rows.length === 0) {
     return {
-      html: `<div class="pp-board-body pp-board-body--empty">${renderEmpty()}${aside}</div>${cta}`,
+      html: `<div class="pp-board-body pp-board-body--empty">${renderEmpty(t)}${aside}</div>${cta}`,
       participants: 0,
     }
   }
   const perHole = !!opts.perHole
-  const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3), perHole)}</div>`
+  const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3), perHole, t)}</div>`
   const body =
     `<div class="pp-board-body">` +
-    `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3), perHole)}</div>` +
+    `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3), perHole, t)}</div>` +
     aside +
     `</div>`
   return { html: podium + body + cta, participants: rows.length }
@@ -95,7 +105,7 @@ function scorecardHtml(holeStrokes: number[] | null | undefined, total: number):
   )
 }
 
-function podiumCard(row: RankedRow, isFirst: boolean, perHole: boolean): string {
+function podiumCard(row: RankedRow, isFirst: boolean, perHole: boolean, t: Board): string {
   const chipSize = isFirst ? 52 : 44
   const chipFont = isFirst ? 24 : 20
   const scoreFont = isFirst ? 62 : 46
@@ -120,20 +130,20 @@ function podiumCard(row: RankedRow, isFirst: boolean, perHole: boolean): string 
     `<div class="pp-podium-name" style="${accent}">${esc(row.entry.name)}</div>` +
     team +
     `<div class="pp-podium-score" style="${accent}font-size:${scoreFont}px" data-role="score">${row.entry.strokes}</div>` +
-    `<div class="pp-podium-unit">Schläge</div>` +
+    `<div class="pp-podium-unit">${esc(t.strokesUnit)}</div>` +
     card +
     `</div>`
   )
 }
 
-function renderPodium(top: RankedRow[], perHole: boolean): string {
+function renderPodium(top: RankedRow[], perHole: boolean, t: Board): string {
   const first = top[0]
   const second = top[1]
   const third = top[2]
   const cards: string[] = []
-  if (second) cards.push(podiumCard(second, false, perHole))
-  if (first) cards.push(podiumCard(first, true, perHole))
-  if (third) cards.push(podiumCard(third, false, perHole))
+  if (second) cards.push(podiumCard(second, false, perHole, t))
+  if (first) cards.push(podiumCard(first, true, perHole, t))
+  if (third) cards.push(podiumCard(third, false, perHole, t))
   return cards.join('')
 }
 
@@ -145,9 +155,9 @@ function moveHtml(row: RankedRow): string {
   return ''
 }
 
-function listRow(row: RankedRow, perHole: boolean): string {
+function listRow(row: RankedRow, perHole: boolean, t: Board): string {
   const team = row.entry.team ? `<span class="pp-row-team">${esc(row.entry.team)}</span>` : ''
-  const tie = row.tied ? '<span class="pp-tie">geteilt</span>' : ''
+  const tie = row.tied ? `<span class="pp-tie">${esc(t.tied)}</span>` : ''
   const card = perHole ? scorecardHtml(row.entry.holeStrokes, row.entry.strokes) : ''
   // Expandable only when there's a scorecard to reveal; plain row otherwise.
   const cls = card ? 'pp-row pp-row--exp' : 'pp-row'
@@ -169,16 +179,20 @@ function listRow(row: RankedRow, perHole: boolean): string {
   )
 }
 
-function renderList(rest: RankedRow[], perHole: boolean): string {
-  return rest.map((r) => listRow(r, perHole)).join('')
+function renderList(rest: RankedRow[], perHole: boolean, t: Board): string {
+  return rest.map((r) => listRow(r, perHole, t)).join('')
 }
 
-function qrAside(entryUrl: string, updatedAt: number): string {
+function updatedHtml(updatedAt: number, t: Board): string {
+  return `<div class="pp-mono pp-updated" data-ts="${updatedAt}" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:4px">${esc(t.updatedPrefix + t.justNow)}</div>`
+}
+
+function qrAside(entryUrl: string, updatedAt: number, t: Board): string {
   return (
     `<div class="pp-board-aside">` +
     `<div class="pp-qr" style="width:132px;height:132px;padding:11px;border-radius:14px">${qrSvg(entryUrl, { module: 4 })}</div>` +
-    `<div class="pp-h" style="font-weight:700;font-size:14px;color:#FFFDF8;margin-top:12px">Scan &amp; mitspielen</div>` +
-    `<div class="pp-mono pp-updated" data-ts="${updatedAt}" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:4px">aktualisiert gerade eben</div>` +
+    `<div class="pp-h" style="font-weight:700;font-size:14px;color:#FFFDF8;margin-top:12px">${esc(t.scanToPlay)}</div>` +
+    updatedHtml(updatedAt, t) +
     `</div>`
   )
 }
@@ -187,7 +201,7 @@ function qrAside(entryUrl: string, updatedAt: number): string {
 // box's footprint so the board layout doesn't shift when toggling status. Does
 // NOT reuse the `.pp-qr` class — its `svg { width:100% }` rule would blow up the
 // little lock glyph.
-function lockedAside(updatedAt: number): string {
+function lockedAside(updatedAt: number, t: Board): string {
   const lock =
     `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">` +
     `<rect x="4" y="10.5" width="16" height="10.5" rx="2.4" fill="#16261F"/>` +
@@ -198,14 +212,14 @@ function lockedAside(updatedAt: number): string {
     `<div class="pp-board-aside">` +
     `<div style="width:132px;height:132px;box-sizing:border-box;padding:14px;border-radius:14px;background:var(--pp-card);box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">` +
     lock +
-    `<div class="pp-h" style="font-weight:700;font-size:13px;color:var(--pp-ink);text-align:center;line-height:1.25">Eintragen<br>geschlossen</div>` +
+    `<div class="pp-h" style="font-weight:700;font-size:13px;color:var(--pp-ink);text-align:center;line-height:1.25">${esc(t.lockedAsideLine1)}<br>${esc(t.lockedAsideLine2)}</div>` +
     `</div>` +
-    `<div class="pp-mono pp-updated" data-ts="${updatedAt}" style="font-size:10px;color:rgba(246,241,230,.6);margin-top:12px">aktualisiert gerade eben</div>` +
+    updatedHtml(updatedAt, t).replace('margin-top:4px', 'margin-top:12px') +
     `</div>`
   )
 }
 
-function renderEmpty(): string {
+function renderEmpty(t: Board): string {
   return (
     '<div class="pp-board-empty">' +
     `<div style="position:relative;width:96px;height:60px;margin-bottom:22px">` +
@@ -213,8 +227,8 @@ function renderEmpty(): string {
     `<div style="position:absolute;bottom:14px;left:38px;width:3px;height:46px;background:#FFFDF8;border-radius:2px"></div>` +
     `<div style="position:absolute;bottom:46px;left:41px;width:22px;height:15px;background:#E2533B;clip-path:polygon(0 0,100% 50%,0 100%);transform-origin:left center;animation:pp-wave 2.4s ease-in-out infinite"></div>` +
     `</div>` +
-    `<h2 class="pp-h" style="margin:0 0 8px;font-weight:800;font-size:clamp(20px,2.6vw,26px);color:#FFFDF8">Noch keine Ergebnisse</h2>` +
-    `<p style="margin:0;font-family:var(--font-body);font-size:15px;color:rgba(246,241,230,.75)">Sei die/der Erste auf dem Platz!</p>` +
+    `<h2 class="pp-h" style="margin:0 0 8px;font-weight:800;font-size:clamp(20px,2.6vw,26px);color:#FFFDF8">${esc(t.emptyTitle)}</h2>` +
+    `<p style="margin:0;font-family:var(--font-body);font-size:15px;color:rgba(246,241,230,.75)">${esc(t.emptyBody)}</p>` +
     '</div>'
   )
 }

@@ -143,8 +143,54 @@ Set in `wrangler.jsonc` (`vars`) for production, overridden by `.dev.vars` local
 | `ACCESS_TEAM_DOMAIN` | Cloudflare Access team domain, e.g. `myteam.cloudflareaccess.com` (no scheme). |
 | `ACCESS_AUD` | The Access application's **Application Audience (AUD)** tag. |
 | `DEV_ADMIN_BYPASS` | `"true"` to skip Access locally. **Honored only when Access is unconfigured** (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` empty), so it is inert — fail-closed — in any real deployment even if left on. |
+| `TURNSTILE_SITE_KEY` | Public Cloudflare Turnstile site key. Empty → the create-form widget is not shown. Safe to put in `vars`. |
+| `TURNSTILE_SECRET_KEY` | Turnstile secret key — set as a **secret** (`wrangler secret put`). Empty → server-side verification is skipped. When set, `POST /games` (open self-service create) is verified and fails closed. |
 
 Bindings: `DB` (D1), `GAME_ROOM` (Durable Object), `ASSETS` (static assets).
+
+## Going live (i18n, legal, fonts, anti-spam)
+
+**Languages (DE/EN).** The whole public surface is internationalised via a small
+i18n layer (`src/i18n/`): typed dictionaries (`de.ts` is the source of truth,
+`en.ts` mirrors its shape), locale negotiation middleware, and a context provider
+consumed with `useI18n()` / `useT()`.
+
+- **Site locale** (landing, legal, 404, create flow) is per-visitor: `?lang=de|en`
+  → `pp_lang` cookie → `Accept-Language` → German default. A switcher sets it.
+- **Game locale** is stored per game (chosen at creation, migration `0002`). The
+  **board** and **entry page** render in the game's language because the board's
+  HTML is produced once by the Durable Object and broadcast to every screen.
+- Add a locale: extend `LOCALES` in `src/i18n/locale.ts`, add a dictionary file,
+  and translate. The `Dictionary` type makes missing keys a compile error.
+
+**Legal pages.** `/impressum` (§5 DDG) and `/datenschutz` (GDPR), DE + EN, in
+`src/ui/Legal.tsx`, linked from the landing footer. Operator details (name /
+address / email / optional phone) are read from `LEGAL_*` env vars via
+`src/lib/legalInfo.ts`, so your address never lives in the git repo — set them
+locally in `.dev.vars` and in production as secrets:
+
+```bash
+wrangler secret put LEGAL_NAME      # also LEGAL_STREET, LEGAL_CITY,
+                                    # LEGAL_COUNTRY, LEGAL_EMAIL, (LEGAL_PHONE)
+```
+
+Until they're set, `[PLACEHOLDER]` text + a draft notice render. ⚠️ Have the text
+reviewed before going live — it's a template, not legal advice. (An Impressum is
+required even for a free, public service in Germany; it must show a real
+*ladungsfähige* address, not a P.O. box.)
+
+**Fonts are self-hosted** (`public/fonts/` + `public/fonts.css`) so no visitor IP
+is sent to Google. Regenerate after changing the font set: `node scripts/vendor-fonts.mjs`.
+
+**Social / SEO.** The landing + legal pages emit Open Graph + Twitter cards,
+canonical + `hreflang`, and a 1200×630 share image at `public/img/og.png`.
+`robots.txt` + `sitemap.xml` are served by the Worker; opaque `/g`, `/m`, `/admin`
+URLs are `noindex`.
+
+**Spam protection.** Set up [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/):
+create a widget, put the site key in `TURNSTILE_SITE_KEY` (vars) and the secret in
+`TURNSTILE_SECRET_KEY` (`wrangler secret put`). The open `POST /games` then
+requires a valid token. Both empty → disabled (fine for local dev).
 
 ## Deployment
 

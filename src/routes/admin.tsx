@@ -82,6 +82,7 @@ adminRoutes.post('/games', async (c) => {
     entryMode: parsed.data.entryMode,
     teamsEnabled: parsed.data.teamsEnabled,
     status: parsed.data.status,
+    locale: parsed.data.locale ?? 'de',
   })
   c.header('HX-Redirect', `/admin/games/${game.publicId}`)
   return c.body(null, 200)

@@ -14,3 +14,21 @@ ACCESS_AUD=""
 # uses a mock identity so you can develop admin without Cloudflare Access.
 # MUST remain "false" (unset) in production.
 DEV_ADMIN_BYPASS="true"
+
+# Cloudflare Turnstile (spam protection on the open create-game form). Leave both
+# empty to disable locally. In production set TURNSTILE_SITE_KEY in wrangler.jsonc
+# vars and the secret via: wrangler secret put TURNSTILE_SECRET_KEY
+TURNSTILE_SITE_KEY=""
+TURNSTILE_SECRET_KEY=""
+
+# Impressum / Datenschutz operator details. Required for a public DE launch.
+# Kept out of git (like this project's .dev.vars). In production set each as a
+# secret: wrangler secret put LEGAL_NAME  (etc.). The Impressum is public anyway,
+# so these aren't true secrets — this just keeps your address out of the repo.
+LEGAL_NAME="Vorname Nachname"
+LEGAL_STREET="Straße und Hausnummer"
+LEGAL_CITY="PLZ Stadt"
+LEGAL_COUNTRY="Germany"
+LEGAL_EMAIL="you@example.com"
+# Optional — leave empty to omit the phone line from the Impressum.
+LEGAL_PHONE=""

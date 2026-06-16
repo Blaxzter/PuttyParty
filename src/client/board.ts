@@ -15,20 +15,39 @@ const live = document.getElementById('pp-board-live')
 const participantsEl = document.getElementById('pp-participants')
 const confetti = document.querySelector<HTMLElement>('.pp-board-confetti')
 
+// Relative "last updated" copy in the game's language (data-locale on .pp-board).
+// Must match the server's initial render in src/ui/board/standings.ts.
+const TIME = {
+  de: {
+    updated: 'aktualisiert ',
+    justNow: 'gerade eben',
+    sec: (s: number) => `vor ${s} Sek.`,
+    min: (m: number) => `vor ${m} Min.`,
+    hr: (h: number) => `vor ${h} Std.`,
+  },
+  en: {
+    updated: 'updated ',
+    justNow: 'just now',
+    sec: (s: number) => `${s}s ago`,
+    min: (m: number) => `${m}m ago`,
+    hr: (h: number) => `${h}h ago`,
+  },
+}[board?.dataset.locale === 'en' ? 'en' : 'de']
+
 function relTime(ts: number): string {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000))
-  if (s < 5) return 'gerade eben'
-  if (s < 60) return `vor ${s} Sek.`
+  if (s < 5) return TIME.justNow
+  if (s < 60) return TIME.sec(s)
   const m = Math.round(s / 60)
-  if (m < 60) return `vor ${m} Min.`
+  if (m < 60) return TIME.min(m)
   const h = Math.round(m / 60)
-  return `vor ${h} Std.`
+  return TIME.hr(h)
 }
 
 function tickUpdated(): void {
   for (const el of document.querySelectorAll<HTMLElement>('.pp-updated[data-ts]')) {
     const ts = Number(el.dataset.ts)
-    if (Number.isFinite(ts)) el.textContent = `aktualisiert ${relTime(ts)}`
+    if (Number.isFinite(ts)) el.textContent = `${TIME.updated}${relTime(ts)}`
   }
 }
 
