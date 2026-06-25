@@ -23,6 +23,11 @@ export const BoardPage: FC<{
   const { t, locale } = useI18n()
   const meta = boardMeta(game, locale)
   const rows = diffStandings(null, computeStandings(entries))
+  // 1–3 players render the centred "showcase" layout (see renderStandings). The
+  // board element carries a marker class so the static shell — chiefly the
+  // confetti, which lives outside the live-updated region — can re-anchor itself
+  // above the centred podium. The client keeps it in sync on live updates.
+  const few = rows.length >= 1 && rows.length <= 3
   const rendered = renderStandings(rows, {
     entryUrl,
     updatedAt,
@@ -36,7 +41,11 @@ export const BoardPage: FC<{
       bodyClass="pp-body--board"
       scripts={['/board.js']}
     >
-      <div class="pp-board" data-public-id={game.publicId} data-locale={locale}>
+      <div
+        class={`pp-board${few ? ' pp-board--few' : ''}`}
+        data-public-id={game.publicId}
+        data-locale={locale}
+      >
         <div
           class={`pp-board-confetti${rows.length === 0 ? ' pp-board-confetti--hidden' : ''}`}
           aria-hidden="true"

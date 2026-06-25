@@ -949,6 +949,67 @@ input[type="number"]::-webkit-inner-spin-button {
     height: 100%;
 }
 
+/* ---- Showcase: 1–3 players (no leaderboard list yet) ----
+   With fewer than four players there's no list panel, so the podium becomes the
+   hero — centered on the turf above a prominent join card — instead of a lone
+   tile floating over a big empty box. The server swaps back to the list layout
+   the moment a fourth player joins. */
+.pp-board-showcase {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(28px, 4vw, 56px);
+    padding: 0 clamp(20px, 3vw, 40px) clamp(24px, 3vw, 44px);
+}
+/* Larger, more celebratory cards when the podium stands on its own. */
+.pp-podium--show .pp-podium-card {
+    width: clamp(168px, 20vw, 264px);
+    padding: 22px 20px 26px;
+}
+.pp-podium--show .pp-podium-card--first {
+    width: clamp(190px, 23vw, 300px);
+    padding: 28px 22px 32px;
+}
+/* Join card: QR (or padlock) beside the prompt, reading as a clear invitation. */
+.pp-board-join {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 1.8vw, 26px);
+    padding: clamp(14px, 1.4vw, 20px) clamp(20px, 2.2vw, 30px);
+    background: rgba(255, 253, 248, 0.08);
+    border: 1px solid rgba(246, 241, 230, 0.16);
+    border-radius: 20px;
+}
+.pp-board-join-qr {
+    flex: none;
+    width: clamp(116px, 12vw, 150px);
+    height: clamp(116px, 12vw, 150px);
+    box-sizing: border-box;
+}
+.pp-board-join-lock {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(104px, 11vw, 132px);
+    height: clamp(104px, 11vw, 132px);
+    background: var(--pp-card);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.pp-board-join-text {
+    text-align: left;
+}
+.pp-board-join-h {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: clamp(16px, 1.6vw, 22px);
+    color: #fffdf8;
+}
+
 .pp-board-empty {
     flex: 1;
     display: flex;
@@ -986,6 +1047,13 @@ input[type="number"]::-webkit-inner-spin-button {
 .pp-board-confetti--hidden {
     display: none;
 }
+/* Showcase (1–3 players): the podium is centred on the turf, so the top-anchored
+   confetti would rain onto empty space above it. Drop the confetti origin down to
+   just above the leader card (which sits ~22% from the top here). The mobile
+   fallback nudges it further down to match the lower podium there. */
+.pp-board--few .pp-board-confetti {
+    top: 12%;
+}
 
 /* Mobile board fallback: stack podium + list, hide the QR aside column. */
 @media (max-width: 720px) {
@@ -1017,6 +1085,59 @@ input[type="number"]::-webkit-inner-spin-button {
     .pp-podium-card--first {
         width: 33%;
         padding: 12px 8px;
+    }
+    /* Showcase podium on a phone: override the larger desktop widths and size by
+       player count — a full 3-card row sits at 33%, but one or two cards would
+       look stranded that narrow, so widen them. A definite width is required for
+       the percentage card widths below to resolve: the showcase centres the
+       podium (align-items:center), which would otherwise shrink-wrap it to an
+       indefinite width and strand a lone card off-centre. */
+    .pp-podium--show {
+        width: 100%;
+        /* The showcase container already insets content; drop the podium's own
+           side padding so three cards aren't squeezed by double padding. */
+        padding-left: 0;
+        padding-right: 0;
+    }
+    /* min-width:0 lets cards honour their % width instead of growing to a long
+       name's min-content width, which would push three cards past a phone edge. */
+    .pp-podium--show .pp-podium-card,
+    .pp-podium--show .pp-podium-card--first {
+        padding: 12px 8px;
+        min-width: 0;
+    }
+    .pp-podium--n1 .pp-podium-card--first {
+        width: 56%;
+    }
+    .pp-podium--n2 .pp-podium-card,
+    .pp-podium--n2 .pp-podium-card--first {
+        width: 44%;
+    }
+    .pp-podium--n3 .pp-podium-card,
+    .pp-podium--n3 .pp-podium-card--first {
+        width: 33%;
+    }
+    /* Podium staircase: the narrow mobile cards end up nearly equal height, so the
+       big-screen "taller first card" read is lost. Lift them into a 2nd–1st–3rd
+       silhouette (bottoms no longer flush) so the ranking reads at a glance. */
+    .pp-podium--n2 .pp-podium-card--first,
+    .pp-podium--n3 .pp-podium-card--first {
+        transform: translateY(-22px);
+    }
+    .pp-podium--n3 .pp-podium-card:nth-child(1) {
+        transform: translateY(-9px);
+    }
+    /* Podium sits lower on the taller phone board — drop the confetti to match. */
+    .pp-board--few .pp-board-confetti {
+        top: 22%;
+    }
+    .pp-board-showcase {
+        gap: 28px;
+        padding-bottom: 24px;
+    }
+    .pp-board-join {
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .pp-board-cta {
         display: flex;

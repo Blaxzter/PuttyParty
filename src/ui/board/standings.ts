@@ -50,23 +50,48 @@ export interface RenderedStandings {
 /** Renders the full inner HTML of #pp-board-live for the given ranked rows. */
 export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): RenderedStandings {
   const { t } = opts
-  const aside = opts.locked
-    ? lockedAside(opts.updatedAt, t)
-    : qrAside(opts.entryUrl, opts.updatedAt, t)
+  const perHole = !!opts.perHole
   // Mobile-only CTA: on the phone showing the board, the QR is useless, so the
   // design swaps it for a direct entry link (hidden on the big screen via CSS).
   // Dropped when locked — there's nowhere useful to send the tap.
   const cta = opts.locked
     ? ''
     : `<a class="pp-board-cta" href="${esc(opts.entryUrl)}">${esc(t.ctaOwnScore)}</a>`
+
   if (rows.length === 0) {
+    const aside = opts.locked
+      ? lockedAside(opts.updatedAt, t)
+      : qrAside(opts.entryUrl, opts.updatedAt, t)
     return {
       html: `<div class="pp-board-body pp-board-body--empty">${renderEmpty(t)}${aside}</div>${cta}`,
       participants: 0,
     }
   }
-  const perHole = !!opts.perHole
-  const podium = `<div class="pp-podium" id="pp-podium">${renderPodium(rows.slice(0, 3), perHole, t)}</div>`
+
+  const podiumInner = renderPodium(rows.slice(0, 3), perHole, t)
+
+  // 1–3 players: there's no leaderboard list yet, so skip the empty list panel
+  // and make the podium the hero — centered on the turf with a prominent join
+  // card — instead of a lone tile floating above a big empty box. The server
+  // re-renders to the list layout below as soon as a 4th player joins.
+  if (rows.length <= 3) {
+    const join = opts.locked
+      ? joinPanelLocked(opts.updatedAt, t)
+      : joinPanelQr(opts.entryUrl, opts.updatedAt, t)
+    // --n{1,2,3} lets the mobile fallback widen the cards when there are fewer
+    // than three (33%-wide cards only read well as a full podium row).
+    const showcase =
+      `<div class="pp-board-showcase">` +
+      `<div class="pp-podium pp-podium--show pp-podium--n${rows.length}" id="pp-podium">${podiumInner}</div>` +
+      join +
+      `</div>`
+    return { html: showcase + cta, participants: rows.length }
+  }
+
+  const aside = opts.locked
+    ? lockedAside(opts.updatedAt, t)
+    : qrAside(opts.entryUrl, opts.updatedAt, t)
+  const podium = `<div class="pp-podium" id="pp-podium">${podiumInner}</div>`
   const body =
     `<div class="pp-board-body">` +
     `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3), perHole, t)}</div>` +
@@ -197,24 +222,58 @@ function qrAside(entryUrl: string, updatedAt: number, t: Board): string {
   )
 }
 
-// Shown in place of the QR when the game is locked/archived. Mirrors the QR
-// box's footprint so the board layout doesn't shift when toggling status. Does
-// NOT reuse the `.pp-qr` class — its `svg { width:100% }` rule would blow up the
-// little lock glyph.
-function lockedAside(updatedAt: number, t: Board): string {
-  const lock =
+// Padlock glyph used by both the locked aside and the locked showcase join card.
+function lockGlyph(): string {
+  return (
     `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">` +
     `<rect x="4" y="10.5" width="16" height="10.5" rx="2.4" fill="#16261F"/>` +
     `<path d="M7.3 10.5V7.4a4.7 4.7 0 0 1 9.4 0v3.1" stroke="#16261F" stroke-width="2.2" fill="none"/>` +
     `<circle cx="12" cy="15.2" r="1.7" fill="#FFFDF8"/>` +
     `</svg>`
+  )
+}
+
+// Shown in place of the QR when the game is locked/archived. Mirrors the QR
+// box's footprint so the board layout doesn't shift when toggling status. Does
+// NOT reuse the `.pp-qr` class — its `svg { width:100% }` rule would blow up the
+// little lock glyph.
+function lockedAside(updatedAt: number, t: Board): string {
   return (
     `<div class="pp-board-aside">` +
     `<div style="width:132px;height:132px;box-sizing:border-box;padding:14px;border-radius:14px;background:var(--pp-card);box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">` +
-    lock +
+    lockGlyph() +
     `<div class="pp-h" style="font-weight:700;font-size:13px;color:var(--pp-ink);text-align:center;line-height:1.25">${esc(t.lockedAsideLine1)}<br>${esc(t.lockedAsideLine2)}</div>` +
     `</div>` +
     updatedHtml(updatedAt, t).replace('margin-top:4px', 'margin-top:12px') +
+    `</div>`
+  )
+}
+
+// Horizontal join card for the 1–3 player showcase: a big QR next to the
+// "scan to play" prompt. Fills the space the leaderboard list would occupy and
+// doubles as the call-to-action to get more players onto the board.
+function joinPanelQr(entryUrl: string, updatedAt: number, t: Board): string {
+  return (
+    `<div class="pp-board-join">` +
+    `<div class="pp-qr pp-board-join-qr">${qrSvg(entryUrl, { module: 4 })}</div>` +
+    `<div class="pp-board-join-text">` +
+    `<div class="pp-board-join-h">${esc(t.scanToPlay)}</div>` +
+    updatedHtml(updatedAt, t) +
+    `</div>` +
+    `</div>`
+  )
+}
+
+// Locked variant of the showcase join card: the padlock glyph instead of a QR
+// scanning the entry page would dead-end on the locked form.
+function joinPanelLocked(updatedAt: number, t: Board): string {
+  return (
+    `<div class="pp-board-join">` +
+    `<div class="pp-board-join-lock">${lockGlyph()}</div>` +
+    `<div class="pp-board-join-text">` +
+    `<div class="pp-board-join-h">${esc(t.lockedAsideLine1)} ${esc(t.lockedAsideLine2)}</div>` +
+    updatedHtml(updatedAt, t) +
+    `</div>` +
     `</div>`
   )
 }

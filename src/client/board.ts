@@ -113,6 +113,9 @@ function apply(msg: StandingsMessage): void {
   // Confetti lives in the static shell (outside #pp-board-live), so toggle it
   // here: no participants → no podium → no confetti.
   if (confetti) confetti.classList.toggle('pp-board-confetti--hidden', msg.participants === 0)
+  // 1–3 players use the centred showcase layout; keep the shell's marker class in
+  // sync so the confetti re-anchors above the podium (mirrors BoardPage's `few`).
+  if (board) board.classList.toggle('pp-board--few', msg.participants >= 1 && msg.participants <= 3)
   restoreExpanded()
   tickUpdated()
 }
