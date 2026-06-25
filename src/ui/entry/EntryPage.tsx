@@ -60,23 +60,33 @@ function HoleGrid({
   const t = useT()
   const holes = Array.from({ length: game.holes }, (_, i) => i + 1)
   const initial = (i: number) => values?.holes?.[i] ?? ''
+  // Players enter strokes *played* (1..limit). Reaching the limit means the ball
+  // was picked up, so the pickup penalty is added — shown per cell as a "+n"
+  // badge rather than folded into a single number. recordedOf mirrors the server.
+  const limit = game.maxStrokesPerHole
+  const penalty = game.pickupPenalty
+  const reachedLimit = (n: number) => limit != null && Number.isFinite(n) && n >= limit
+  const recordedOf = (n: number) => (reachedLimit(n) ? n + penalty : n)
   const total = (values?.holes ?? [])
     .map((v) => Number(v))
     .filter((n) => Number.isFinite(n) && n > 0)
-    .reduce((a, b) => a + b, 0)
-  // Highest value recordable on a hole when the organiser set a stroke limit.
-  const cap = game.maxStrokesPerHole != null ? game.maxStrokesPerHole + game.pickupPenalty : null
+    .reduce((sum, n) => sum + recordedOf(n), 0)
   return (
     <div>
       <span class="pp-field-label">
         {t.entry.holesLabel} <span class="pp-req">*</span>
       </span>
-      {cap != null ? (
+      {limit != null ? (
         <span style="display:block;margin:-2px 0 8px;font-family:var(--font-body);font-size:12px;color:var(--pp-text-soft)">
-          {t.entry.maxPerHoleHint(cap)}
+          {t.entry.maxPerHoleHint(limit, penalty)}
         </span>
       ) : null}
-      <div class="pp-holes-grid" id="pp-holes">
+      <div
+        class="pp-holes-grid"
+        id="pp-holes"
+        data-limit={limit ?? undefined}
+        data-penalty={penalty}
+      >
         {holes.map((h, i) => (
           <div class="pp-hole" key={h}>
             <span class="idx">{h}</span>
@@ -85,11 +95,20 @@ function HoleGrid({
               type="number"
               inputmode="numeric"
               min="1"
-              max={cap ?? undefined}
+              max={limit ?? undefined}
               data-hole
               value={initial(i)}
               placeholder="–"
             />
+            {limit != null ? (
+              <span
+                class="pp-hole__badge"
+                data-hole-badge
+                hidden={!reachedLimit(Number(initial(i)))}
+              >
+                +{penalty}
+              </span>
+            ) : null}
           </div>
         ))}
       </div>

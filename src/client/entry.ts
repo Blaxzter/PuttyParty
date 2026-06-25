@@ -29,10 +29,18 @@ function recomputeTotal(): void {
   const grid = document.getElementById('pp-holes')
   const totalEl = document.getElementById('pp-hole-total')
   if (!grid || !totalEl) return
+  // Reaching the limit = picked up: add the penalty and light the "+n" badge.
+  const limit = Number.parseInt(grid.getAttribute('data-limit') ?? '', 10)
+  const penaltyRaw = Number.parseInt(grid.getAttribute('data-penalty') ?? '', 10)
+  const hasLimit = Number.isFinite(limit) && limit > 0
+  const penalty = Number.isFinite(penaltyRaw) ? penaltyRaw : 0
   let sum = 0
   for (const input of grid.querySelectorAll<HTMLInputElement>('input[data-hole]')) {
     const n = Number.parseInt(input.value, 10)
-    if (Number.isFinite(n) && n > 0) sum += n
+    const reached = hasLimit && Number.isFinite(n) && n >= limit
+    const badge = input.parentElement?.querySelector<HTMLElement>('[data-hole-badge]')
+    if (badge) badge.hidden = !reached
+    if (Number.isFinite(n) && n > 0) sum += reached ? n + penalty : n
   }
   totalEl.textContent = String(sum)
 }

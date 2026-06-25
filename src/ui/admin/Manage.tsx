@@ -199,6 +199,35 @@ const OwnerBanner: FC<{ manageUrl: string }> = ({ manageUrl }) => (
   </div>
 )
 
+/** Read-only mirror of the game's scoring config, shown next to the title. */
+const SettingsSummary: FC<{ game: Game }> = ({ game }) => {
+  const perHole = game.entryMode === 'per_hole'
+  const chip = (label: string, accent?: boolean) => (
+    <span
+      class="pp-h"
+      style={`display:inline-flex;align-items:center;font-weight:600;font-size:11.5px;padding:4px 10px;border-radius:999px;${
+        accent
+          ? 'background:#FBF3DD;color:var(--pp-green-text);border:1px solid #ecd9a3'
+          : 'background:#ECE9DF;color:var(--pp-text-soft);border:1px solid transparent'
+      }`}
+    >
+      {label}
+    </span>
+  )
+  return (
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+      {chip(perHole ? `Pro Bahn · ${game.holes} Bahnen` : 'Gesamtschläge')}
+      {perHole && game.maxStrokesPerHole != null
+        ? chip(
+            `Max. ${game.maxStrokesPerHole} Schläge/Bahn · +${game.pickupPenalty} bei Aufnahme`,
+            true,
+          )
+        : null}
+      {chip(game.teamsEnabled ? 'Teams an' : 'Teams aus')}
+    </div>
+  )
+}
+
 export interface ManagePageProps {
   game: Game
   entries: Entry[]
@@ -254,6 +283,7 @@ export const ManagePage: FC<ManagePageProps> = ({
               ✎
             </button>
           </div>
+          <SettingsSummary game={game} />
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:9px">

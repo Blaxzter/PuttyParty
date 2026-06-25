@@ -63,11 +63,12 @@ publicRoutes.post('/:publicId/entries', async (c) => {
       typeof body[`hole_${i + 1}`] === 'string' ? (body[`hole_${i + 1}`] as string) : '',
     )
     values.holes = holes
-    // With a configured limit, cap each hole at limit + pickup penalty.
-    const maxPerHole =
-      game.maxStrokesPerHole != null ? game.maxStrokesPerHole + game.pickupPenalty : undefined
+    // Players submit strokes *played*; validate against the limit (not the
+    // recorded cap). Reaching the limit means the ball was picked up, so the
+    // pickup penalty is added to that hole's recorded score.
+    const limit = game.maxStrokesPerHole
     const parsed = schemas
-      .perHoleEntrySchema(game.holes, maxPerHole)
+      .perHoleEntrySchema(game.holes, limit ?? undefined)
       .safeParse({ ...values, holeStrokes: holes })
     if (!parsed.success) {
       return pageLocale(
@@ -78,7 +79,10 @@ publicRoutes.post('/:publicId/entries', async (c) => {
     }
     name = parsed.data.name
     team = parsed.data.team
-    holeStrokes = parsed.data.holeStrokes
+    holeStrokes =
+      limit != null
+        ? parsed.data.holeStrokes.map((n) => (n >= limit ? n + game.pickupPenalty : n))
+        : parsed.data.holeStrokes
     strokes = holeStrokes.reduce((a, b) => a + b, 0)
   } else {
     values.strokes = typeof body.strokes === 'string' ? body.strokes : ''

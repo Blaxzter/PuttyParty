@@ -80,6 +80,11 @@ export const GameCard: FC<{ game: GameWithCount; baseUrl: string }> = ({ game, b
           </strong>{' '}
           Teilnehmer:innen
         </div>
+        {game.entryMode === 'per_hole' && game.maxStrokesPerHole != null ? (
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:11.5px;color:var(--pp-text-soft);margin:-8px 0 16px">
+            🏁 Max. {game.maxStrokesPerHole} Schläge/Bahn · +{game.pickupPenalty} bei Aufnahme
+          </div>
+        ) : null}
         <div style="display:flex;gap:8px">
           {archived ? (
             <a

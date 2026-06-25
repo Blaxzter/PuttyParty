@@ -82,7 +82,8 @@ export const de = {
     teamLabel: 'Team / Abteilung',
     teamPlaceholder: 'z. B. Diakonie',
     strokesLabel: 'Gesamtschläge',
-    maxPerHoleHint: (n: number) => `Max. ${n} pro Bahn — danach Ball aufnehmen.`,
+    maxPerHoleHint: (limit: number, penalty: number) =>
+      `Max. ${limit} Schläge — danach Ball aufnehmen (+${penalty}).`,
     strokesPlaceholder: 'z. B. 42',
     submit: 'Eintragen',
     toBoardArrow: 'Zur Bestenliste →',

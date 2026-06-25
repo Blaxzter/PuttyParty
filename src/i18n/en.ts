@@ -83,7 +83,8 @@ export const en: Dictionary = {
     teamLabel: 'Team / department',
     teamPlaceholder: 'e.g. Marketing',
     strokesLabel: 'Total strokes',
-    maxPerHoleHint: (n: number) => `Max. ${n} per hole — then pick up the ball.`,
+    maxPerHoleHint: (limit: number, penalty: number) =>
+      `Max. ${limit} strokes — then pick up the ball (+${penalty}).`,
     strokesPlaceholder: 'e.g. 42',
     submit: 'Submit',
     toBoardArrow: 'To the leaderboard →',
