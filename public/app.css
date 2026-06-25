@@ -1354,7 +1354,9 @@ input[type="number"]::-webkit-inner-spin-button {
     gap: 22px;
     align-items: start;
 }
-@media (max-width: 760px) {
+/* Stack to one column while there's still room: in two columns the entries
+   card shrinks below the row's fixed widths (~398px) and clips the actions. */
+@media (max-width: 900px) {
     .pp-manage-grid {
         grid-template-columns: 1fr;
     }
