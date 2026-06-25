@@ -104,6 +104,7 @@ export const de = {
     strokesUnit: 'Schläge',
     tied: 'geteilt',
     scanToPlay: 'Scan & mitspielen',
+    spotsOpen: 'Noch viele Plätze frei',
     ctaOwnScore: '＋ Eigenen Score eintragen',
     emptyTitle: 'Noch keine Ergebnisse',
     emptyBody: 'Sei die/der Erste auf dem Platz!',

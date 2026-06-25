@@ -92,9 +92,16 @@ export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): R
     ? lockedAside(opts.updatedAt, t)
     : qrAside(opts.entryUrl, opts.updatedAt, t)
   const podium = `<div class="pp-podium" id="pp-podium">${podiumInner}</div>`
+  const rest = rows.slice(3)
+  // A handful of players past the podium leaves the full-height kiosk list panel
+  // mostly empty. Below this threshold, top up the slack with faint "open slot"
+  // rows + an invite so it reads as a board filling up, not a barren white box.
+  // Open games only — the invite ("spots open") would be misleading once entry
+  // is closed, so a locked board keeps its plain (compact) list.
+  const fill = !opts.locked && rest.length <= 6 ? listFill(rest.length, t) : ''
   const body =
     `<div class="pp-board-body">` +
-    `<div class="pp-board-list" id="pp-list">${renderList(rows.slice(3), perHole, t)}</div>` +
+    `<div class="pp-board-list" id="pp-list">${renderList(rest, perHole, t)}${fill}</div>` +
     aside +
     `</div>`
   return { html: podium + body + cta, participants: rows.length }
@@ -206,6 +213,27 @@ function listRow(row: RankedRow, perHole: boolean, t: Board): string {
 
 function renderList(rest: RankedRow[], perHole: boolean, t: Board): string {
   return rest.map((r) => listRow(r, perHole, t)).join('')
+}
+
+// Filler for a sparse leaderboard: a few faint "open slot" rows (continuing the
+// list's dashed rhythm) plus a gentle invite, sized to grow into whatever height
+// the short list leaves below it. Purely decorative — the real join CTA is the QR
+// aside — so the whole block is aria-hidden. Fewer real rows → more ghost rows.
+function listFill(restCount: number, t: Board): string {
+  const ghostCount = restCount <= 3 ? 3 : restCount <= 5 ? 2 : 1
+  const widths = ['46%', '38%', '52%']
+  const ghosts = Array.from(
+    { length: ghostCount },
+    (_, i) =>
+      `<div class="pp-ghost-row"><span class="pp-ghost-dot"></span>` +
+      `<span class="pp-ghost-bar" style="width:${widths[i % widths.length]}"></span></div>`,
+  ).join('')
+  return (
+    `<div class="pp-board-list-fill" aria-hidden="true">` +
+    `<div class="pp-ghosts">${ghosts}</div>` +
+    `<div class="pp-board-list-hint">${esc(t.spotsOpen)}</div>` +
+    `</div>`
+  )
 }
 
 function updatedHtml(updatedAt: number, t: Board): string {

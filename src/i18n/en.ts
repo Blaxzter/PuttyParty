@@ -105,6 +105,7 @@ export const en: Dictionary = {
     strokesUnit: 'strokes',
     tied: 'tied',
     scanToPlay: 'Scan & play',
+    spotsOpen: 'Plenty of spots still open',
     ctaOwnScore: '＋ Enter your own score',
     emptyTitle: 'No results yet',
     emptyBody: 'Be the first on the course!',

@@ -52,6 +52,37 @@ describe('renderStandings — QR vs locked', () => {
   })
 })
 
+describe('renderStandings — sparse leaderboard filler', () => {
+  it('fills the near-empty list panel with ghost slots + an invite (4 players)', () => {
+    // 4 entries -> 3 on the podium, 1 lonely row leaving the panel mostly empty.
+    const { html } = renderStandings(rowsOf(e(1, 40), e(2, 50), e(3, 60), e(4, 70)), OPTS)
+    expect(html).toContain('pp-board-list-fill')
+    expect(html).toContain('pp-ghost-row')
+    expect(html).toContain('Noch viele Plätze frei')
+  })
+
+  it('drops the filler once the list is populated enough to fill the panel', () => {
+    // 11 entries -> 3 on the podium, 8 in the list (> threshold).
+    const many = Array.from({ length: 11 }, (_, i) => e(i + 1, 40 + i))
+    const { html } = renderStandings(rowsOf(...many), OPTS)
+    expect(html).not.toContain('pp-board-list-fill')
+  })
+
+  it('omits the filler when the game is locked (no spots to invite into)', () => {
+    const { html } = renderStandings(rowsOf(e(1, 40), e(2, 50), e(3, 60), e(4, 70)), {
+      ...OPTS,
+      locked: true,
+    })
+    expect(html).not.toContain('pp-board-list-fill')
+  })
+
+  it('never shows the filler in the 1–3 player showcase layout', () => {
+    const { html } = renderStandings(rowsOf(e(1, 40), e(2, 50), e(3, 60)), OPTS)
+    expect(html).toContain('pp-board-showcase')
+    expect(html).not.toContain('pp-board-list-fill')
+  })
+})
+
 describe('renderStandings — per-hole scorecards', () => {
   it('omits scorecards entirely unless perHole is set', () => {
     const { html } = renderStandings(rowsOf(eh(1, [3, 4, 5]), eh(2, [4, 4, 4])), OPTS)
