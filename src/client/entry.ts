@@ -93,6 +93,12 @@ function clearDraft(): void {
 document.addEventListener('input', (e) => {
   const target = e.target
   if (!(target instanceof HTMLElement) || !target.closest('form.pp-entry-form')) return
+  // Clamp a per-hole input to the configured stroke cap (server also enforces it).
+  if (target instanceof HTMLInputElement && target.hasAttribute('data-hole') && target.max) {
+    const max = Number(target.max)
+    const val = Number(target.value)
+    if (Number.isFinite(max) && Number.isFinite(val) && val > max) target.value = String(max)
+  }
   recomputeTotal()
   saveDraft()
 })

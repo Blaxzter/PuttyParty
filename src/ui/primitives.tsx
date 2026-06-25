@@ -123,6 +123,8 @@ export interface FieldProps {
     inputClass?: string;
     inputMode?: "numeric" | "text";
     autofocus?: boolean;
+    min?: number;
+    max?: number;
 }
 
 export const Field: FC<FieldProps> = (p) => (
@@ -137,6 +139,8 @@ export const Field: FC<FieldProps> = (p) => (
             value={p.value as string | undefined}
             placeholder={p.placeholder}
             inputmode={p.inputMode}
+            min={p.min}
+            max={p.max}
             autofocus={p.autofocus}
             aria-invalid={p.error ? "true" : undefined}
             class={`pp-input ${p.inputClass ?? ""} ${p.error ? "pp-input--invalid" : ""}`}

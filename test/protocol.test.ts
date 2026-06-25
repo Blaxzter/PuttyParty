@@ -10,6 +10,8 @@ const game = (over: Partial<Game> = {}): Game => ({
   date: '2026-06-13',
   location: 'Gemeindewiese',
   holes: 9,
+  maxStrokesPerHole: null,
+  pickupPenalty: 1,
   entryMode: 'total',
   teamsEnabled: true,
   status: 'open',

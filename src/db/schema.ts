@@ -16,6 +16,14 @@ export const games = sqliteTable(
     date: text('date').notNull(),
     location: text('location'),
     holes: integer('holes').notNull().default(9),
+    /**
+     * Optional per-hole stroke cap (per_hole games). After this many strokes the
+     * ball is picked up; NULL = no limit. The highest value recordable on a hole
+     * is `maxStrokesPerHole + pickupPenalty`.
+     */
+    maxStrokesPerHole: integer('max_strokes_per_hole'),
+    /** Strokes added when the ball is picked up at the limit (classic rule: 1). */
+    pickupPenalty: integer('pickup_penalty').notNull().default(1),
     /** 'total' = single Gesamtschläge input; 'per_hole' = per-Bahn grid summed. */
     entryMode: text('entry_mode', { enum: ['total', 'per_hole'] })
       .notNull()

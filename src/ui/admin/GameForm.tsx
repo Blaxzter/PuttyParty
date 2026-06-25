@@ -8,6 +8,8 @@ export interface GameFormValues {
   date?: string
   location?: string
   holes?: string
+  maxStrokesPerHole?: string
+  pickupPenalty?: string
   entryMode?: 'total' | 'per_hole'
   teamsEnabled?: boolean
   status?: 'open' | 'locked'
@@ -36,6 +38,10 @@ function resolve(props: GameFormProps): Required<GameFormValues> {
     date: v?.date ?? game?.date ?? '',
     location: v?.location ?? game?.location ?? '',
     holes: v?.holes ?? String(game?.holes ?? 9),
+    maxStrokesPerHole:
+      v?.maxStrokesPerHole ??
+      (game?.maxStrokesPerHole != null ? String(game.maxStrokesPerHole) : ''),
+    pickupPenalty: v?.pickupPenalty ?? String(game?.pickupPenalty ?? 1),
     entryMode: v?.entryMode ?? game?.entryMode ?? 'total',
     teamsEnabled: v?.teamsEnabled ?? (game ? game.teamsEnabled : true),
     status: v?.status ?? (game?.status === 'locked' ? 'locked' : 'open'),
@@ -48,6 +54,12 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
   const t = useT()
   const v = resolve(props)
   const errors = props.errors ?? {}
+  // Server-rendered seed for the "max recorded per hole" hint; the client keeps
+  // it in sync as the organiser edits the limit/penalty (see client/admin.ts).
+  const limitNum = Number(v.maxStrokesPerHole)
+  const hasLimit = v.maxStrokesPerHole.trim() !== '' && Number.isFinite(limitNum) && limitNum > 0
+  const penaltyNum = Number(v.pickupPenalty)
+  const recordedCap = limitNum + (Number.isFinite(penaltyNum) ? penaltyNum : 0)
   const submit =
     props.mode === 'create'
       ? { 'hx-post': props.createPath ?? '/admin/games' }
@@ -147,6 +159,47 @@ export const GameFormBody: FC<GameFormProps> = (props) => {
                 inputClass="pp-input--score"
               />
             </div>
+          </div>
+
+          <div
+            data-holes-field
+            hidden={v.entryMode === 'total'}
+            style="background:var(--pp-cream);border:1.5px solid var(--pp-border-input);border-radius:11px;padding:12px 14px;margin-bottom:16px"
+          >
+            <span class="pp-field-label">{t.gameForm.strokeLimit}</span>
+            <div class="pp-form-row">
+              <Field
+                name="maxStrokesPerHole"
+                label={t.gameForm.maxStrokes}
+                optional
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={90}
+                value={v.maxStrokesPerHole}
+                error={errors.maxStrokesPerHole}
+                inputClass="pp-input--score"
+              />
+              <Field
+                name="pickupPenalty"
+                label={t.gameForm.penalty}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={9}
+                value={v.pickupPenalty}
+                error={errors.pickupPenalty}
+                inputClass="pp-input--score"
+              />
+            </div>
+            <p
+              data-cap-hint
+              data-cap-tpl={t.gameForm.recordedMax}
+              hidden={!hasLimit}
+              style="margin:10px 2px 0;font-family:var(--font-body);font-size:12px;color:var(--pp-text-soft)"
+            >
+              {hasLimit ? t.gameForm.recordedMax.replace('{n}', String(recordedCap)) : ''}
+            </p>
           </div>
 
           <div style="display:flex;align-items:center;gap:8px;background:var(--pp-cream);border:1.5px solid var(--pp-border-input);border-radius:11px;padding:12px 14px;margin-bottom:16px">

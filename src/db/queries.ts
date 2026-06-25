@@ -62,6 +62,10 @@ export type CreateGameInput = {
   date: string
   location: string | null
   holes: number
+  /** Per-hole stroke cap; null = no limit. */
+  maxStrokesPerHole?: number | null
+  /** Strokes added on pickup at the cap (defaults to 1). */
+  pickupPenalty?: number
   entryMode: 'total' | 'per_hole'
   teamsEnabled: boolean
   status: 'open' | 'locked'
@@ -72,7 +76,13 @@ export async function createGame(db: Db, input: CreateGameInput): Promise<Game> 
   const now = Date.now()
   const [row] = await db
     .insert(games)
-    .values({ ...input, createdAt: now, updatedAt: now })
+    .values({
+      ...input,
+      maxStrokesPerHole: input.maxStrokesPerHole ?? null,
+      pickupPenalty: input.pickupPenalty ?? 1,
+      createdAt: now,
+      updatedAt: now,
+    })
     .returning()
   return row as Game
 }
@@ -82,6 +92,8 @@ export type UpdateGamePatch = Partial<{
   date: string
   location: string | null
   holes: number
+  maxStrokesPerHole: number | null
+  pickupPenalty: number
   entryMode: 'total' | 'per_hole'
   teamsEnabled: boolean
   status: 'open' | 'locked' | 'archived'

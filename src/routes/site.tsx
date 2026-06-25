@@ -97,6 +97,8 @@ siteRoutes.post('/games', async (c) => {
     date: parsed.data.date,
     location: parsed.data.location,
     holes: parsed.data.holes,
+    maxStrokesPerHole: parsed.data.maxStrokesPerHole,
+    pickupPenalty: parsed.data.pickupPenalty,
     entryMode: parsed.data.entryMode,
     teamsEnabled: parsed.data.teamsEnabled,
     status: parsed.data.status,

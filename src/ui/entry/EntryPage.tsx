@@ -64,11 +64,18 @@ function HoleGrid({
     .map((v) => Number(v))
     .filter((n) => Number.isFinite(n) && n > 0)
     .reduce((a, b) => a + b, 0)
+  // Highest value recordable on a hole when the organiser set a stroke limit.
+  const cap = game.maxStrokesPerHole != null ? game.maxStrokesPerHole + game.pickupPenalty : null
   return (
     <div>
       <span class="pp-field-label">
         {t.entry.holesLabel} <span class="pp-req">*</span>
       </span>
+      {cap != null ? (
+        <span style="display:block;margin:-2px 0 8px;font-family:var(--font-body);font-size:12px;color:var(--pp-text-soft)">
+          {t.entry.maxPerHoleHint(cap)}
+        </span>
+      ) : null}
       <div class="pp-holes-grid" id="pp-holes">
         {holes.map((h, i) => (
           <div class="pp-hole" key={h}>
@@ -78,6 +85,7 @@ function HoleGrid({
               type="number"
               inputmode="numeric"
               min="1"
+              max={cap ?? undefined}
               data-hole
               value={initial(i)}
               placeholder="–"

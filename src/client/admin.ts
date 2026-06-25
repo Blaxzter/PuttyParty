@@ -39,14 +39,35 @@ function closeModal(el: Element): void {
   el.closest('.pp-modal-backdrop')?.classList.remove('is-open')
 }
 
-// In the game form, the number of holes only matters when scoring per hole, so
-// hide "Anzahl Bahnen" while "Gesamtschläge" (total) is selected.
+// In the game form, the per-hole fields (holes count + stroke limit) only matter
+// when scoring per hole, so hide them while "Gesamtschläge" (total) is selected.
 function syncHolesVisibility(scope: ParentNode): void {
   const group = scope.querySelector<HTMLElement>('[data-entry-mode]')
-  const holes = scope.querySelector<HTMLElement>('[data-holes-field]')
-  if (!group || !holes) return
+  if (!group) return
   const checked = group.querySelector<HTMLInputElement>('input[name="entryMode"]:checked')
-  holes.hidden = checked?.value !== 'per_hole'
+  const perHole = checked?.value === 'per_hole'
+  for (const el of scope.querySelectorAll<HTMLElement>('[data-holes-field]')) {
+    el.hidden = !perHole
+  }
+}
+
+// Keep the "max recorded per hole" hint in sync with the limit + penalty inputs.
+// The localised template lives on the element (data-cap-tpl) so this stays
+// language-agnostic; {n} is replaced with limit + penalty.
+function syncStrokeLimit(scope: ParentNode): void {
+  const limitEl = scope.querySelector<HTMLInputElement>('input[name="maxStrokesPerHole"]')
+  const hint = scope.querySelector<HTMLElement>('[data-cap-hint]')
+  if (!limitEl || !hint) return
+  const limit = Number.parseInt(limitEl.value, 10)
+  if (!Number.isFinite(limit) || limit <= 0) {
+    hint.hidden = true
+    return
+  }
+  const penEl = scope.querySelector<HTMLInputElement>('input[name="pickupPenalty"]')
+  const penRaw = penEl ? Number.parseInt(penEl.value, 10) : 0
+  const pen = Number.isFinite(penRaw) ? penRaw : 0
+  hint.textContent = (hint.getAttribute('data-cap-tpl') ?? '').replace('{n}', String(limit + pen))
+  hint.hidden = false
 }
 
 document.addEventListener('change', (event) => {
@@ -54,6 +75,17 @@ document.addEventListener('change', (event) => {
   if (target instanceof HTMLInputElement && target.name === 'entryMode') {
     const form = target.closest<HTMLElement>('form') ?? document
     syncHolesVisibility(form)
+    syncStrokeLimit(form)
+  }
+})
+
+document.addEventListener('input', (event) => {
+  const target = event.target as HTMLElement
+  if (
+    target instanceof HTMLInputElement &&
+    (target.name === 'maxStrokesPerHole' || target.name === 'pickupPenalty')
+  ) {
+    syncStrokeLimit(target.closest<HTMLElement>('form') ?? document)
   }
 })
 
@@ -349,8 +381,12 @@ document.body.addEventListener('htmx:afterSwap', (event) => {
     swapped.querySelector<HTMLInputElement>('input[autofocus], input')?.focus()
   }
   if (swapped?.id === 'pp-modal-body') renderTurnstile(swapped)
-  if (swapped) syncHolesVisibility(swapped)
+  if (swapped) {
+    syncHolesVisibility(swapped)
+    syncStrokeLimit(swapped)
+  }
 })
 
-// Set the initial holes visibility for any game form present on load.
+// Set the initial holes visibility / stroke-limit hint for a game form on load.
 syncHolesVisibility(document)
+syncStrokeLimit(document)

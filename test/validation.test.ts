@@ -62,6 +62,22 @@ describe('perHoleEntrySchema', () => {
     const r = perHoleEntrySchema(3).safeParse({ name: 'Lena', holeStrokes: ['3', '', '2'] })
     expect(r.success).toBe(false)
   })
+
+  it('accepts a hole value at the configured cap', () => {
+    const r = perHoleEntrySchema(3, 7).safeParse({ name: 'Lena', holeStrokes: ['7', '4', '2'] })
+    expect(r.success).toBe(true)
+  })
+
+  it('rejects a hole value above the configured cap with the capped message', () => {
+    const r = perHoleEntrySchema(3, 7).safeParse({ name: 'Lena', holeStrokes: ['8', '4', '2'] })
+    expect(r.success).toBe(false)
+    if (!r.success) expect(fieldErrors(r.error).holeStrokes).toBe('Maximal 7 Schläge pro Bahn.')
+  })
+
+  it('falls back to the 99 sanity cap when no limit is configured', () => {
+    expect(perHoleEntrySchema(1).safeParse({ name: 'L', holeStrokes: ['99'] }).success).toBe(true)
+    expect(perHoleEntrySchema(1).safeParse({ name: 'L', holeStrokes: ['100'] }).success).toBe(false)
+  })
 })
 
 describe('createGameSchema', () => {
@@ -86,6 +102,41 @@ describe('createGameSchema', () => {
   it('treats an absent toggle as false', () => {
     const r = createGameSchema.safeParse({ name: 'X', date: '01.01.2026' })
     expect(r.success && r.data.teamsEnabled).toBe(false)
+  })
+
+  it('defaults the stroke limit to null and the penalty to 1', () => {
+    const r = createGameSchema.safeParse({ name: 'X', date: '01.01.2026', holes: '9' })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data.maxStrokesPerHole).toBeNull()
+      expect(r.data.pickupPenalty).toBe(1)
+    }
+  })
+
+  it('parses a configured stroke limit and penalty', () => {
+    const r = createGameSchema.safeParse({
+      name: 'X',
+      date: '01.01.2026',
+      holes: '18',
+      maxStrokesPerHole: '6',
+      pickupPenalty: '1',
+    })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data.maxStrokesPerHole).toBe(6)
+      expect(r.data.pickupPenalty).toBe(1)
+    }
+  })
+
+  it('rejects an out-of-range stroke limit', () => {
+    const r = createGameSchema.safeParse({
+      name: 'X',
+      date: '01.01.2026',
+      holes: '9',
+      maxStrokesPerHole: '0',
+    })
+    expect(r.success).toBe(false)
+    if (!r.success) expect(fieldErrors(r.error).maxStrokesPerHole).toBeTruthy()
   })
 
   it('rejects an impossible date', () => {

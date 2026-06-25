@@ -24,8 +24,12 @@ function strokeField(v: V) {
   )
 }
 
-/** Per-hole stroke count (1–99). */
-function holeStrokeField(v: V) {
+/**
+ * Per-hole stroke count (1..cap). `cap` defaults to 99 (a sanity bound); a game
+ * with a configured stroke limit passes its recordable maximum
+ * (limit + pickup penalty) so the cap message names the right number.
+ */
+function holeStrokeField(v: V, cap = 99) {
   return z.preprocess(
     (val) => {
       const n = Number(String(val ?? '').trim())
@@ -35,9 +39,38 @@ function holeStrokeField(v: V) {
       .number({ error: v.perHoleFrom1 })
       .int(v.wholeNumbers)
       .min(1, v.perHoleFrom1)
-      .max(99, v.maxPerHole),
+      .max(cap, cap === 99 ? v.maxPerHole : v.maxPerHoleN(cap)),
   )
 }
+
+/**
+ * Optional per-hole stroke limit. Empty -> null (no limit); otherwise 1..90 so
+ * that limit + penalty stays within the 99 per-hole sanity bound.
+ */
+const strokeLimitField = (v: V) =>
+  z.preprocess((val) => {
+    const s = String(val ?? '').trim()
+    if (s === '') return null
+    const n = Number(s)
+    return Number.isFinite(n) ? n : Number.NaN
+  }, z
+    .number()
+    .int(v.strokeLimitRange)
+    .min(1, v.strokeLimitRange)
+    .max(90, v.strokeLimitRange)
+    .nullable())
+
+/** Pickup penalty (0..9). Empty -> 1 (the classic "+1" on pickup). */
+const pickupPenaltyField = (v: V) =>
+  z.preprocess(
+    (val) => {
+      const s = String(val ?? '').trim()
+      if (s === '') return 1
+      const n = Number(s)
+      return Number.isFinite(n) ? n : Number.NaN
+    },
+    z.number().int(v.penaltyRange).min(0, v.penaltyRange).max(9, v.penaltyRange),
+  )
 
 const optionalText = (max: number) =>
   z
@@ -83,12 +116,15 @@ export function makeEntrySchemas(t: Dictionary) {
       team: optionalText(60),
       strokes: strokeField(v),
     }),
-    /** Per-hole submission: validates exactly `holes` values. */
-    perHoleEntrySchema: (holes: number) =>
+    /**
+     * Per-hole submission: validates exactly `holes` values. `maxPerHole`, when
+     * the game has a stroke limit, caps each hole at limit + pickup penalty.
+     */
+    perHoleEntrySchema: (holes: number, maxPerHole?: number) =>
       z.object({
         name: nameField(v),
         team: optionalText(60),
-        holeStrokes: z.array(holeStrokeField(v)).length(holes, v.allHoles),
+        holeStrokes: z.array(holeStrokeField(v, maxPerHole)).length(holes, v.allHoles),
       }),
     // Admin: organiser edits the total directly, even for per-hole games.
     adminEntrySchema: z.object({
@@ -114,6 +150,8 @@ export function makeGameSchema(t: Dictionary) {
       },
       z.number().int().min(1, v.minHole).max(60, v.maxHoles),
     ),
+    maxStrokesPerHole: strokeLimitField(v),
+    pickupPenalty: pickupPenaltyField(v),
     entryMode: z.enum(['total', 'per_hole']).default('total'),
     teamsEnabled: toggleField,
     status: z.enum(['open', 'locked']).default('open'),
@@ -128,6 +166,8 @@ export function makeUpdateGameSchema(t: Dictionary) {
     date: dateField(v).optional(),
     location: optionalText(120),
     holes: z.coerce.number().int().min(1).max(60).optional(),
+    maxStrokesPerHole: strokeLimitField(v).optional(),
+    pickupPenalty: pickupPenaltyField(v).optional(),
     entryMode: z.enum(['total', 'per_hole']).optional(),
     teamsEnabled: toggleField.optional(),
     status: z.enum(['open', 'locked', 'archived']).optional(),

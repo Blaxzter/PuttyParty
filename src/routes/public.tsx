@@ -63,8 +63,11 @@ publicRoutes.post('/:publicId/entries', async (c) => {
       typeof body[`hole_${i + 1}`] === 'string' ? (body[`hole_${i + 1}`] as string) : '',
     )
     values.holes = holes
+    // With a configured limit, cap each hole at limit + pickup penalty.
+    const maxPerHole =
+      game.maxStrokesPerHole != null ? game.maxStrokesPerHole + game.pickupPenalty : undefined
     const parsed = schemas
-      .perHoleEntrySchema(game.holes)
+      .perHoleEntrySchema(game.holes, maxPerHole)
       .safeParse({ ...values, holeStrokes: holes })
     if (!parsed.success) {
       return pageLocale(
