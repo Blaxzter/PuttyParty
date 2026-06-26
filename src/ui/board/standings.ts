@@ -98,7 +98,7 @@ export function renderStandings(rows: RankedRow[], opts: StandingsRenderOpts): R
   // rows + an invite so it reads as a board filling up, not a barren white box.
   // Open games only — the invite ("spots open") would be misleading once entry
   // is closed, so a locked board keeps its plain (compact) list.
-  const fill = !opts.locked && rest.length <= 6 ? listFill(rest.length, t) : ''
+  const fill = !opts.locked && rest.length <= 6 ? listFill(rows.length, t) : ''
   const body =
     `<div class="pp-board-body">` +
     `<div class="pp-board-list" id="pp-list">${renderList(rest, perHole, t)}${fill}</div>` +
@@ -215,22 +215,27 @@ function renderList(rest: RankedRow[], perHole: boolean, t: Board): string {
   return rest.map((r) => listRow(r, perHole, t)).join('')
 }
 
-// Filler for a sparse leaderboard: a few faint "open slot" rows (continuing the
-// list's dashed rhythm) plus a gentle invite, sized to grow into whatever height
-// the short list leaves below it. Purely decorative — the real join CTA is the QR
-// aside — so the whole block is aria-hidden. Fewer real rows → more ghost rows.
-function listFill(restCount: number, t: Board): string {
-  const ghostCount = restCount <= 3 ? 3 : restCount <= 5 ? 2 : 1
-  const widths = ['46%', '38%', '52%']
-  const ghosts = Array.from(
-    { length: ghostCount },
+// Filler for a sparse leaderboard. With only a handful of players past the podium
+// the full-height kiosk list panel would be a flat white void. Fill it with faint
+// ledger stripes (CSS, covering whatever height the short list leaves) plus a few
+// "open position" rows — a hollow ring + em-dash, never a solid bar or spinner, so
+// they read as reserved seats rather than a loading skeleton — and a gentle invite.
+// `total` is the full player count; the open rows show the next ranks (count + 1…),
+// which matches standard competition ranking. Purely decorative → aria-hidden.
+function listFill(total: number, t: Board): string {
+  const startRank = total + 1
+  const openRows = Array.from(
+    { length: 3 },
     (_, i) =>
-      `<div class="pp-ghost-row"><span class="pp-ghost-dot"></span>` +
-      `<span class="pp-ghost-bar" style="width:${widths[i % widths.length]}"></span></div>`,
+      `<div class="pp-open-row">` +
+      `<span class="pp-open-rank">${startRank + i}</span>` +
+      `<span class="pp-open-ring"></span>` +
+      `<span class="pp-open-dash">—</span>` +
+      `</div>`,
   ).join('')
   return (
     `<div class="pp-board-list-fill" aria-hidden="true">` +
-    `<div class="pp-ghosts">${ghosts}</div>` +
+    openRows +
     `<div class="pp-board-list-hint">${esc(t.spotsOpen)}</div>` +
     `</div>`
   )

@@ -57,7 +57,9 @@ describe('renderStandings — sparse leaderboard filler', () => {
     // 4 entries -> 3 on the podium, 1 lonely row leaving the panel mostly empty.
     const { html } = renderStandings(rowsOf(e(1, 40), e(2, 50), e(3, 60), e(4, 70)), OPTS)
     expect(html).toContain('pp-board-list-fill')
-    expect(html).toContain('pp-ghost-row')
+    expect(html).toContain('pp-open-row')
+    // Next open positions are numbered after the current field (4 players -> 5,6,7).
+    expect(html).toContain('>5</span>')
     expect(html).toContain('Noch viele Plätze frei')
   })
 

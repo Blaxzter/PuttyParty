@@ -848,38 +848,56 @@ input[type="number"]::-webkit-inner-spin-button {
 
 /* ---- Sparse leaderboard filler (4+ players, only a few past the podium) ----
    The kiosk list panel is flex:1 (full height); with just a handful of rows it
-   would be a barren white box. Top up the slack with faint "open slot" rows that
-   continue the leaderboard's dashed rhythm, plus a gentle invite centred in the
-   leftover space. Grows to absorb whatever height the short list leaves. */
+   would be a flat white void. Fill the slack with faint ledger stripes (covering
+   whatever height the short list leaves) plus a few "open position" rows — a
+   hollow ring + em-dash, deliberately empty rather than a loading skeleton — and
+   a gentle invite centred over the open area. The 44px stripe band matches the
+   open-row height so the rows land as alternating zebra bands. */
 .pp-board-list-fill {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 44px,
+        rgba(22, 38, 31, 0.03) 44px,
+        rgba(22, 38, 31, 0.03) 88px
+    );
 }
-.pp-ghosts .pp-ghost-row {
+.pp-open-row {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: clamp(7px, 1vw, 11px) 0;
+    height: 44px;
+    box-sizing: border-box;
 }
-/* Dashes between ghost slots only — no trailing dash floating above the invite. */
-.pp-ghosts .pp-ghost-row:not(:last-child) {
-    border-bottom: 1px dashed #e2dac4;
+/* Faint echo of the real rank column — reads as the next open positions. */
+.pp-open-rank {
+    width: 30px;
+    text-align: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: clamp(15px, 1.3vw, 18px);
+    color: rgba(22, 38, 31, 0.24);
 }
-.pp-ghost-dot {
+/* Hollow ring (solid, NOT dashed — a dashed ring reads as a spinner) = open seat. */
+.pp-open-ring {
     flex: none;
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 2px dashed rgba(22, 38, 31, 0.18);
+    border: 1.5px solid rgba(22, 38, 31, 0.18);
 }
-.pp-ghost-bar {
-    height: 12px;
-    border-radius: 6px;
-    background: rgba(22, 38, 31, 0.06);
+.pp-open-dash {
+    margin-left: auto;
+    font-family: var(--font-score);
+    font-size: clamp(22px, 2.2vw, 30px);
+    line-height: 1;
+    color: rgba(22, 38, 31, 0.18);
 }
-/* auto top+bottom margins centre the invite in the space left under the ghosts. */
+/* auto top+bottom margins centre the invite in the striped space below the rows. */
 .pp-board-list-hint {
     margin: auto 0;
     padding: 14px 0 4px;
